@@ -80,7 +80,7 @@ export default function NexoraNotifications() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(30);
-    setNotifications((data as Notification[]) || []);
+    setNotifications((data as unknown as Notification[]) || []);
   };
 
   // ── Écoute des nouvelles commandes en temps réel ─────────
