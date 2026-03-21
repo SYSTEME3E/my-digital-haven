@@ -93,10 +93,10 @@ export default function DashboardPage() {
 
     const [depResult, entResult, coffreResult, liensResult, pretsResult, investResult] =
       await Promise.all([
-        supabase.from("depenses").select("montant, devise, date_depense, titre, created_at").order("created_at", { ascending: false }),
-        supabase.from("entrees").select("montant, devise, date_entree, titre, created_at").order("created_at", { ascending: false }),
-        supabase.from("coffre_fort").select("id"),
-        supabase.from("liens_contacts").select("id"),
+        supabase.from("depenses" as any).select("montant, devise, date_depense, titre, created_at").order("created_at", { ascending: false }),
+        supabase.from("entrees" as any).select("montant, devise, date_entree, titre, created_at").order("created_at", { ascending: false }),
+        supabase.from("coffre_fort" as any).select("id"),
+        supabase.from("liens_contacts" as any).select("id"),
         supabase.from("prets" as any).select("id").eq("statut", "en_attente"),
         supabase.from("investissements" as any).select("id").eq("statut", "actif"),
       ]);

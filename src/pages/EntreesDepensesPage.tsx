@@ -101,7 +101,7 @@ function EntreesContent() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("entrees").select("*").order("date_entree", { ascending: false });
+    const { data } = await supabase.from("entrees" as any).select("*").order("date_entree", { ascending: false });
     setEntrees(data || []);
     setLoading(false);
   };
@@ -119,7 +119,7 @@ function EntreesContent() {
     }
     if (!form.titre || !form.montant) { toast({ title: "Titre et montant requis", variant: "destructive" }); return; }
     setSaving(true);
-    const { error } = await supabase.from("entrees").insert({
+    const { error } = await supabase.from("entrees" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), categorie: form.categorie,
       devise: form.devise, date_entree: form.date_entree, note: form.note || null
     });
@@ -137,7 +137,7 @@ function EntreesContent() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette entrée ?")) return;
-    await supabase.from("entrees").delete().eq("id", id);
+    await supabase.from("entrees" as any).delete().eq("id", id);
     toast({ title: "Supprimée" }); load();
   };
 
@@ -265,7 +265,7 @@ function DepensesContent() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("depenses").select("*").order("date_depense", { ascending: false });
+    const { data } = await supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false });
     setDepenses(data || []);
     setLoading(false);
   };
@@ -283,7 +283,7 @@ function DepensesContent() {
     }
     if (!form.titre || !form.montant) { toast({ title: "Titre et montant requis", variant: "destructive" }); return; }
     setSaving(true);
-    const { error } = await supabase.from("depenses").insert({
+    const { error } = await supabase.from("depenses" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), categorie: form.categorie,
       devise: form.devise, date_depense: form.date_depense, note: form.note || null
     });
@@ -301,7 +301,7 @@ function DepensesContent() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette dépense ?")) return;
-    await supabase.from("depenses").delete().eq("id", id);
+    await supabase.from("depenses" as any).delete().eq("id", id);
     toast({ title: "Supprimée" }); load();
   };
 

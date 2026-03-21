@@ -64,7 +64,7 @@ export default function MediasPage() {
 
   const loadMedias = async () => {
     setLoading(true);
-    const { data } = await supabase.from("medias").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("medias" as any).select("*").order("created_at", { ascending: false });
     setMedias((data || []) as Media[]);
     setLoading(false);
   };
@@ -102,7 +102,7 @@ export default function MediasPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nom || !form.url) return;
-    const { error } = await supabase.from("medias").insert({
+    const { error } = await supabase.from("medias" as any).insert({
       nom: form.nom,
       type_media: form.type_media,
       url: form.url,
@@ -125,7 +125,7 @@ export default function MediasPage() {
       const path = m.url.split("/mes-secrets-media/")[1];
       if (path) await supabase.storage.from("mes-secrets-media").remove([path]);
     }
-    await supabase.from("medias").delete().eq("id", m.id);
+    await supabase.from("medias" as any).delete().eq("id", m.id);
     toast({ title: "Supprimé" });
     loadMedias();
   };

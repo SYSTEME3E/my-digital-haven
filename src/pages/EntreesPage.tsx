@@ -54,7 +54,7 @@ export default function EntreesPage() {
 
   const loadEntrees = async () => {
     setLoading(true);
-    const { data } = await supabase.from("entrees").select("*").order("date_entree", { ascending: false }).order("created_at", { ascending: false });
+    const { data } = await supabase.from("entrees" as any).select("*").order("date_entree", { ascending: false }).order("created_at", { ascending: false });
     setEntrees(data || []);
     setLoading(false);
   };
@@ -85,7 +85,7 @@ export default function EntreesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.titre || !form.montant) return;
-    const { error } = await supabase.from("entrees").insert({
+    const { error } = await supabase.from("entrees" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), devise: form.devise,
       categorie: form.categorie, note: form.note || null, date_entree: form.date_entree,
     });
@@ -102,7 +102,7 @@ export default function EntreesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette entrée ?")) return;
-    await supabase.from("entrees").delete().eq("id", id);
+    await supabase.from("entrees" as any).delete().eq("id", id);
     toast({ title: "Supprimé" });
     loadEntrees();
   };

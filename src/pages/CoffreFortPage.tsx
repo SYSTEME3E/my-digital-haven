@@ -72,7 +72,7 @@ export default function CoffreFortPage() {
     };
     let error;
     if (editingId) {
-      ({ error } = await supabase.from("coffre_fort").update(payload).eq("id", editingId));
+      ({ error } = await supabase.from("coffre_fort" as any).update(payload).eq("id", editingId));
     } else {
       ({ error } = await supabase.from("coffre_fort").insert(payload));
     }
@@ -105,7 +105,7 @@ export default function CoffreFortPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("coffre_fort").delete().eq("id", id);
+    await supabase.from("coffre_fort" as any).delete().eq("id", id);
     toast({ title: "Supprimé" });
     loadItems();
   };

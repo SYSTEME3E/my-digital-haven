@@ -55,7 +55,7 @@ export default function DepensesPage() {
 
   const loadDepenses = async () => {
     setLoading(true);
-    const { data } = await supabase.from("depenses").select("*").order("date_depense", { ascending: false }).order("created_at", { ascending: false });
+    const { data } = await supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false }).order("created_at", { ascending: false });
     setDepenses(data || []);
     setLoading(false);
   };
@@ -86,7 +86,7 @@ export default function DepensesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.titre || !form.montant) return;
-    const { error } = await supabase.from("depenses").insert({
+    const { error } = await supabase.from("depenses" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), devise: form.devise,
       categorie: form.categorie, note: form.note || null, date_depense: form.date_depense,
     });
@@ -103,7 +103,7 @@ export default function DepensesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cette dépense ?")) return;
-    await supabase.from("depenses").delete().eq("id", id);
+    await supabase.from("depenses" as any).delete().eq("id", id);
     toast({ title: "Supprimé" });
     loadDepenses();
   };

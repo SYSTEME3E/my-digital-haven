@@ -47,7 +47,7 @@ export default function LiensPage() {
 
   const loadItems = async () => {
     setLoading(true);
-    const { data } = await supabase.from("liens_contacts").select("*").order("ordre").order("created_at", { ascending: false });
+    const { data } = await supabase.from("liens_contacts" as any).select("*").order("ordre").order("created_at", { ascending: false });
     setItems((data || []) as LienContact[]);
     setLoading(false);
   };
@@ -70,7 +70,7 @@ export default function LiensPage() {
     };
     let error;
     if (editingId) {
-      ({ error } = await supabase.from("liens_contacts").update(payload).eq("id", editingId));
+      ({ error } = await supabase.from("liens_contacts" as any).update(payload).eq("id", editingId));
     } else {
       ({ error } = await supabase.from("liens_contacts").insert(payload));
     }
@@ -97,7 +97,7 @@ export default function LiensPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("liens_contacts").delete().eq("id", id);
+    await supabase.from("liens_contacts" as any).delete().eq("id", id);
     toast({ title: "Supprimé" });
     loadItems();
   };

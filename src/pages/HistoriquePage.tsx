@@ -43,8 +43,8 @@ export default function HistoriquePage() {
   const loadAll = async () => {
     setLoading(true);
     const [depRes, entRes] = await Promise.all([
-      supabase.from("depenses").select("*").order("date_depense", { ascending: false }).order("created_at", { ascending: false }),
-      supabase.from("entrees").select("*").order("date_entree", { ascending: false }).order("created_at", { ascending: false }),
+      supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false }).order("created_at", { ascending: false }),
+      supabase.from("entrees" as any).select("*").order("date_entree", { ascending: false }).order("created_at", { ascending: false }),
     ]);
     setDepenses(depRes.data || []);
     setEntrees(entRes.data || []);
