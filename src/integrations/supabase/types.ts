@@ -106,6 +106,53 @@ export type Database = {
         }
         Relationships: []
       }
+      boutiques: {
+        Row: {
+          actif: boolean
+          created_at: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          nom: string
+          slug: string
+          type_boutique: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          nom: string
+          slug: string
+          type_boutique?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          nom?: string
+          slug?: string
+          type_boutique?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boutiques_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -140,6 +187,7 @@ export type Database = {
           telephone: string | null
           type_entree: string
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -153,6 +201,7 @@ export type Database = {
           telephone?: string | null
           type_entree?: string
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -166,38 +215,94 @@ export type Database = {
           telephone?: string | null
           type_entree?: string
           updated_at?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "coffre_fort_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commandes: {
         Row: {
           acheteur_id: string | null
+          boutique_id: string
+          client_adresse: string | null
+          client_email: string | null
+          client_nom: string
+          client_tel: string | null
           created_at: string | null
+          devise: string
           id: string
+          items: Json
           kkiapay_id: string | null
           montant: number
+          numero: string
           produit_id: string | null
-          statut: string | null
+          statut: string
+          statut_paiement: string
+          total: number
+          updated_at: string | null
         }
         Insert: {
           acheteur_id?: string | null
+          boutique_id: string
+          client_adresse?: string | null
+          client_email?: string | null
+          client_nom: string
+          client_tel?: string | null
           created_at?: string | null
+          devise?: string
           id?: string
+          items?: Json
           kkiapay_id?: string | null
-          montant: number
+          montant?: number
+          numero: string
           produit_id?: string | null
-          statut?: string | null
+          statut?: string
+          statut_paiement?: string
+          total?: number
+          updated_at?: string | null
         }
         Update: {
           acheteur_id?: string | null
+          boutique_id?: string
+          client_adresse?: string | null
+          client_email?: string | null
+          client_nom?: string
+          client_tel?: string | null
           created_at?: string | null
+          devise?: string
           id?: string
+          items?: Json
           kkiapay_id?: string | null
           montant?: number
+          numero?: string
           produit_id?: string | null
-          statut?: string | null
+          statut?: string
+          statut_paiement?: string
+          total?: number
+          updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commandes_acheteur_id_fkey"
+            columns: ["acheteur_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commandes_boutique_id_fkey"
+            columns: ["boutique_id"]
+            isOneToOne: false
+            referencedRelation: "boutiques"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commandes_produit_id_fkey"
             columns: ["produit_id"]
@@ -220,6 +325,7 @@ export type Database = {
           note: string | null
           semaine_num: number | null
           titre: string
+          user_id: string
         }
         Insert: {
           annee_num?: number | null
@@ -233,6 +339,7 @@ export type Database = {
           note?: string | null
           semaine_num?: number | null
           titre: string
+          user_id: string
         }
         Update: {
           annee_num?: number | null
@@ -246,8 +353,17 @@ export type Database = {
           note?: string | null
           semaine_num?: number | null
           titre?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "depenses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       entrees: {
         Row: {
@@ -262,6 +378,7 @@ export type Database = {
           note: string | null
           semaine_num: number | null
           titre: string
+          user_id: string
         }
         Insert: {
           annee_num?: number | null
@@ -275,6 +392,7 @@ export type Database = {
           note?: string | null
           semaine_num?: number | null
           titre: string
+          user_id: string
         }
         Update: {
           annee_num?: number | null
@@ -288,11 +406,90 @@ export type Database = {
           note?: string | null
           semaine_num?: number | null
           titre?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "entrees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factures: {
+        Row: {
+          client_email: string | null
+          client_nom: string
+          client_tel: string | null
+          created_at: string | null
+          date_echeance: string | null
+          date_emission: string
+          devise: string
+          id: string
+          items: Json
+          notes: string | null
+          numero: string
+          sous_total: number
+          statut: string
+          taxe: number
+          total: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_nom: string
+          client_tel?: string | null
+          created_at?: string | null
+          date_echeance?: string | null
+          date_emission?: string
+          devise?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          numero: string
+          sous_total?: number
+          statut?: string
+          taxe?: number
+          total?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          client_email?: string | null
+          client_nom?: string
+          client_tel?: string | null
+          created_at?: string | null
+          date_echeance?: string | null
+          date_emission?: string
+          devise?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          numero?: string
+          sous_total?: number
+          statut?: string
+          taxe?: number
+          total?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factures_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investissements: {
         Row: {
+          contrat_accepte: boolean
+          contrat_date: string | null
           created_at: string | null
           date_debut: string
           date_objectif: string | null
@@ -305,8 +502,11 @@ export type Database = {
           statut: string
           type_investissement: string
           updated_at: string | null
+          user_id: string
         }
         Insert: {
+          contrat_accepte?: boolean
+          contrat_date?: string | null
           created_at?: string | null
           date_debut?: string
           date_objectif?: string | null
@@ -319,8 +519,11 @@ export type Database = {
           statut?: string
           type_investissement?: string
           updated_at?: string | null
+          user_id: string
         }
         Update: {
+          contrat_accepte?: boolean
+          contrat_date?: string | null
           created_at?: string | null
           date_debut?: string
           date_objectif?: string | null
@@ -333,8 +536,17 @@ export type Database = {
           statut?: string
           type_investissement?: string
           updated_at?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "investissements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       liens_contacts: {
         Row: {
@@ -344,6 +556,7 @@ export type Database = {
           nom: string
           ordre: number | null
           type_entree: string
+          user_id: string
           valeur: string
         }
         Insert: {
@@ -353,6 +566,7 @@ export type Database = {
           nom: string
           ordre?: number | null
           type_entree?: string
+          user_id: string
           valeur: string
         }
         Update: {
@@ -362,9 +576,18 @@ export type Database = {
           nom?: string
           ordre?: number | null
           type_entree?: string
+          user_id?: string
           valeur?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "liens_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medias: {
         Row: {
@@ -375,6 +598,7 @@ export type Database = {
           taille_bytes: number | null
           type_media: string
           url: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -384,6 +608,7 @@ export type Database = {
           taille_bytes?: number | null
           type_media?: string
           url: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -393,8 +618,146 @@ export type Database = {
           taille_bytes?: number | null
           type_media?: string
           url?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "medias_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexora_annonces_immo: {
+        Row: {
+          contact: string
+          created_at: string | null
+          description: string | null
+          id: string
+          images: Json | null
+          prix: number
+          quartier: string | null
+          statut: string
+          titre: string
+          type: string
+          updated_at: string | null
+          user_id: string
+          ville: string
+          whatsapp: string | null
+        }
+        Insert: {
+          contact?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: Json | null
+          prix?: number
+          quartier?: string | null
+          statut?: string
+          titre: string
+          type?: string
+          updated_at?: string | null
+          user_id: string
+          ville?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          contact?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: Json | null
+          prix?: number
+          quartier?: string | null
+          statut?: string
+          titre?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+          ville?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexora_annonces_immo_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexora_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexora_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nexora_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          lu: boolean
+          message: string
+          titre: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lu?: boolean
+          message: string
+          titre: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lu?: boolean
+          message?: string
+          titre?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nexora_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nexora_sessions: {
         Row: {
@@ -435,45 +798,69 @@ export type Database = {
         Row: {
           avatar_url: string | null
           badge_premium: boolean
+          blocked_at: string | null
+          blocked_reason: string | null
           created_at: string
           email: string
           id: string
           is_active: boolean
           is_admin: boolean
+          last_login: string | null
           nom_prenom: string
           password_hash: string
           plan: string
+          premium_expires_at: string | null
+          premium_since: string | null
           remember_token: string | null
+          status: string
+          suspended_at: string | null
+          suspended_reason: string | null
           updated_at: string
           username: string
         }
         Insert: {
           avatar_url?: string | null
           badge_premium?: boolean
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           email: string
           id?: string
           is_active?: boolean
           is_admin?: boolean
+          last_login?: string | null
           nom_prenom: string
           password_hash: string
           plan?: string
+          premium_expires_at?: string | null
+          premium_since?: string | null
           remember_token?: string | null
+          status?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
           username: string
         }
         Update: {
           avatar_url?: string | null
           badge_premium?: boolean
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           email?: string
           id?: string
           is_active?: boolean
           is_admin?: boolean
+          last_login?: string | null
           nom_prenom?: string
           password_hash?: string
           plan?: string
+          premium_expires_at?: string | null
+          premium_since?: string | null
           remember_token?: string | null
+          status?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
           username?: string
         }
@@ -498,6 +885,7 @@ export type Database = {
           statut: string
           type: string
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -505,7 +893,7 @@ export type Database = {
           date_pret?: string
           devise?: string
           id?: string
-          montant?: number
+          montant: number
           montant_rembourse?: number
           nom_personne: string
           nom_temoin?: string | null
@@ -517,6 +905,7 @@ export type Database = {
           statut?: string
           type?: string
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -536,49 +925,73 @@ export type Database = {
           statut?: string
           type?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      produits: {
-        Row: {
-          categorie_id: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          image_url: string | null
-          nom: string
-          prix: number
-          stock: number | null
-          vendeur_id: string | null
-        }
-        Insert: {
-          categorie_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          nom: string
-          prix: number
-          stock?: number | null
-          vendeur_id?: string | null
-        }
-        Update: {
-          categorie_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          nom?: string
-          prix?: number
-          stock?: number | null
-          vendeur_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "produits_categorie_id_fkey"
-            columns: ["categorie_id"]
+            foreignKeyName: "prets_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "categories"
+            referencedRelation: "nexora_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produits: {
+        Row: {
+          actif: boolean
+          boutique_id: string
+          categorie: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          nom: string
+          photos: Json | null
+          prix: number
+          prix_promo: number | null
+          stock: number
+          stock_illimite: boolean
+          type_produit: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean
+          boutique_id: string
+          categorie?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          nom: string
+          photos?: Json | null
+          prix: number
+          prix_promo?: number | null
+          stock?: number
+          stock_illimite?: boolean
+          type_produit?: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean
+          boutique_id?: string
+          categorie?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          nom?: string
+          photos?: Json | null
+          prix?: number
+          prix_promo?: number | null
+          stock?: number
+          stock_illimite?: boolean
+          type_produit?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produits_boutique_id_fkey"
+            columns: ["boutique_id"]
+            isOneToOne: false
+            referencedRelation: "boutiques"
             referencedColumns: ["id"]
           },
         ]
@@ -621,16 +1034,18 @@ export type Database = {
           id: string
           montant: number
           note: string | null
-          pret_id: string | null
+          pret_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           date_remboursement?: string
           devise?: string
           id?: string
-          montant?: number
+          montant: number
           note?: string | null
-          pret_id?: string | null
+          pret_id: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -639,7 +1054,8 @@ export type Database = {
           id?: string
           montant?: number
           note?: string | null
-          pret_id?: string | null
+          pret_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -647,6 +1063,13 @@ export type Database = {
             columns: ["pret_id"]
             isOneToOne: false
             referencedRelation: "prets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remboursements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
             referencedColumns: ["id"]
           },
         ]
@@ -657,27 +1080,33 @@ export type Database = {
           date_versement: string
           devise: string
           id: string
-          investissement_id: string | null
+          investissement_id: string
           montant: number
           note: string | null
+          type: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           date_versement?: string
           devise?: string
           id?: string
-          investissement_id?: string | null
-          montant?: number
+          investissement_id: string
+          montant: number
           note?: string | null
+          type?: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
           date_versement?: string
           devise?: string
           id?: string
-          investissement_id?: string | null
+          investissement_id?: string
           montant?: number
           note?: string | null
+          type?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -685,6 +1114,13 @@ export type Database = {
             columns: ["investissement_id"]
             isOneToOne: false
             referencedRelation: "investissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "versements_investissement_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "nexora_users"
             referencedColumns: ["id"]
           },
         ]
