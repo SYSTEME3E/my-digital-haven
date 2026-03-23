@@ -23,6 +23,7 @@ import PretsPage from "@/pages/PretsPage";
 import InvestissementsPage from "@/pages/InvestissementsPage";
 import FacturesPage from "@/pages/FacturesPage";
 import EntreesDepensesPage from "@/pages/EntreesDepensesPage";
+import TransfertPage from "@/pages/TransfertPage"; // ✅ Import ajouté
 
 // Boutique
 import BoutiqueAccueilPage from "@/pages/boutique/AccueilPage";
@@ -51,8 +52,8 @@ import { useNavigate } from "react-router-dom";
 const queryClient = new QueryClient();
 
 // ── Durées loader
-const LOADER_LOGIN = 800; // 0.8s —  transition rapide pour les autres pages
-const LOADER_PAGE  = 800;   // 0.8s — transition rapide pour les autres pages
+const LOADER_LOGIN = 800;
+const LOADER_PAGE  = 800;
 
 // ── Page protégée (authentification requise)
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -118,7 +119,7 @@ const App = () => (
         <Sonner />
         <Routes>
 
-          {/* ── AUTHENTICATION — splash screen complet 15s ── */}
+          {/* ── AUTHENTICATION ── */}
           <Route path="/login" element={
             <PageLoader duration={LOADER_LOGIN}>
               <NexoraLoginPage />
@@ -133,6 +134,9 @@ const App = () => (
           <Route path="/liens"            element={<ProtectedPage><LiensPage /></ProtectedPage>} />
           <Route path="/profil"           element={<ProtectedPage><ProfilPage /></ProtectedPage>} />
           <Route path="/abonnement"       element={<ProtectedPage><AbonnementPage /></ProtectedPage>} />
+          
+          {/* ✅ NOUVEAU — NEXORA TRANSFERT */}
+          <Route path="/transfert"        element={<ProtectedPage><TransfertPage /></ProtectedPage>} />
 
           {/* ── LIMITÉ gratuit / illimité premium ── */}
           <Route path="/factures"         element={<ProtectedPage><FacturesPage /></ProtectedPage>} />
@@ -144,13 +148,13 @@ const App = () => (
 
           {/* ── 100% PREMIUM ── */}
           <Route path="/immobilier"           element={<PremiumPage><ImmobilierPage /></PremiumPage>} />
-          <Route path="/boutique"             element={<PremiumPage><BoutiqueAccueilPage /></PremiumPage>} />
+          <Route path="/boutique"               element={<PremiumPage><BoutiqueAccueilPage /></PremiumPage>} />
           <Route path="/boutique/produits"    element={<PremiumPage><BoutiqueProduitsPage /></PremiumPage>} />
           <Route path="/boutique/commandes"   element={<PremiumPage><CommandesPage /></PremiumPage>} />
           <Route path="/boutique/parametres"  element={<PremiumPage><BoutiqueParametresPage /></PremiumPage>} />
 
           {/* ── VITRINE PUBLIQUE ── */}
-          <Route path="/shop/:slug"                    element={<BoutiqueVitrinePage />} />
+          <Route path="/shop/:slug"                        element={<BoutiqueVitrinePage />} />
           <Route path="/shop/:slug/produit/:produitId" element={<ProduitDetailPage />} />
 
           {/* ── PROFIL VENDEUR (public) ── */}
