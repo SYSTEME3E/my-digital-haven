@@ -5,6 +5,52 @@ export const NEXORA_SESSION_KEY = "nexora_session_token";
 export const NEXORA_USER_KEY = "nexora_current_user";
 export const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 heures
 
+// ─── Types & Limites ──────────────────────────────────────────────────────────
+export type NexoraPlan = "gratuit" | "boss" | "roi" | "admin";
+
+export interface NexoraUser {
+  id: string;
+  nom_prenom: string;
+  username: string;
+  email: string;
+  avatar_url?: string | null;
+  is_admin: boolean;
+  plan: NexoraPlan;
+  badge_premium: boolean;
+}
+
+// Configuration stricte des quotas par plan
+export const PLAN_LIMITS = {
+  gratuit: { 
+    produits: 5, 
+    factures: 10, 
+    prets: 2,
+    prix: 0,
+    label: "Gratuit"
+  },
+  boss: { 
+    produits: 20, 
+    factures: 100, 
+    prets: 10,
+    prix: 10, // 10$
+    label: "Boss"
+  },
+  roi: { 
+    produits: Infinity, 
+    factures: Infinity, 
+    prets: Infinity,
+    prix: 20, // 20$
+    label: "Roi"
+  },
+  admin: { 
+    produits: Infinity, 
+    factures: Infinity, 
+    prets: Infinity,
+    prix: 0,
+    label: "Administrateur"
+  },
+};
+
 // ─── Hash sécurisé ────────────────────────────────────────────────────────────
 export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -23,16 +69,31 @@ function generateToken(): string {
     .join("");
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-export interface NexoraUser {
-  id: string;
-  nom_prenom: string;
-  username: string;
-  email: string;
-  avatar_url?: string | null;
-  is_admin: boolean;
-  plan: "gratuit" | "premium" | "admin";
-  badge_premium: boolean;
+// ─── Vérification des Quotas ──────────────────────────────────────────────────
+/**
+ * Vérifie si l'utilisateur a le droit d'ajouter un élément selon son plan
+ */
+export async function canUserAdd(type: "produits" | "factures" | "prets"): Promise<{ can: boolean; current: number; limit: number }> {
+  const user = getNexoraUser();
+  if (!user) return { can: false, current: 0, limit: 0 };
+
+  const limits = PLAN_LIMITS[user.plan as NexoraPlan] || PLAN_LIMITS.gratuit;
+  const limit = limits[type];
+
+  if (limit === Infinity) return { can: true, current: 0, limit: Infinity };
+
+  // On compte les éléments existants dans la table concernée
+  const { count, error } = await supabase
+    .from(type as any)
+    .select("*", { count: 'exact', head: true })
+    .eq("user_id", user.id); // S'assurer que la colonne user_id existe
+
+  const currentCount = count || 0;
+  return {
+    can: currentCount < limit,
+    current: currentCount,
+    limit: limit
+  };
 }
 
 // ─── Inscription ──────────────────────────────────────────────────────────────
@@ -104,25 +165,11 @@ export async function loginUser(data: {
     };
   }
 
-  if ((user as any).password_hash === "INIT" && (user as any).is_admin) {
-    const adminHash = await hashPassword("55237685N");
-    await supabase
-      .from("nexora_users" as any)
-      .update({ password_hash: adminHash })
-      .eq("id", (user as any).id);
-  }
-
   // Vérifier si le compte est suspendu ou bloqué
-  if ((user as any).status === "suspendu") {
+  if ((user as any).status === "suspendu" || (user as any).status === "bloque") {
     return {
       success: false,
-      error: `Votre compte est suspendu. Motif : ${(user as any).suspended_reason || "Contactez l'administrateur."}`,
-    };
-  }
-  if ((user as any).status === "bloque") {
-    return {
-      success: false,
-      error: `Votre compte est bloqué. Motif : ${(user as any).blocked_reason || "Contactez l'administrateur."}`,
+      error: `Votre compte est restreint. Motif : ${(user as any).suspended_reason || (user as any).blocked_reason || "Contactez l'admin."}`,
     };
   }
 
@@ -147,176 +194,100 @@ export async function loginUser(data: {
     badge_premium: (user as any).badge_premium,
   };
 
-  if (data.remember) {
-    localStorage.setItem(NEXORA_SESSION_KEY, token);
-    localStorage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
-  } else {
-    sessionStorage.setItem(NEXORA_SESSION_KEY, token);
-    sessionStorage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
-  }
+  const storage = data.remember ? localStorage : sessionStorage;
+  storage.setItem(NEXORA_SESSION_KEY, token);
+  storage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
 
   return { success: true, user: nexoraUser };
 }
 
 // ─── Déconnexion ──────────────────────────────────────────────────────────────
 export async function logoutUser(): Promise<void> {
-  const token =
-    localStorage.getItem(NEXORA_SESSION_KEY) ||
-    sessionStorage.getItem(NEXORA_SESSION_KEY);
-
+  const token = localStorage.getItem(NEXORA_SESSION_KEY) || sessionStorage.getItem(NEXORA_SESSION_KEY);
   if (token) {
-    await supabase
-      .from("nexora_sessions" as any)
-      .delete()
-      .eq("session_token", token);
+    await supabase.from("nexora_sessions" as any).delete().eq("session_token", token);
   }
-
   localStorage.removeItem(NEXORA_SESSION_KEY);
   localStorage.removeItem(NEXORA_USER_KEY);
   sessionStorage.removeItem(NEXORA_SESSION_KEY);
   sessionStorage.removeItem(NEXORA_USER_KEY);
 }
 
-// ─── Vérifier session ─────────────────────────────────────────────────────────
+// ─── Getters de session ───────────────────────────────────────────────────────
 export function getNexoraUser(): NexoraUser | null {
   try {
-    const raw =
-      localStorage.getItem(NEXORA_USER_KEY) ||
-      sessionStorage.getItem(NEXORA_USER_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as NexoraUser;
-  } catch {
-    return null;
-  }
+    const raw = localStorage.getItem(NEXORA_USER_KEY) || sessionStorage.getItem(NEXORA_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
 export function isNexoraAuthenticated(): boolean {
-  const token =
-    localStorage.getItem(NEXORA_SESSION_KEY) ||
-    sessionStorage.getItem(NEXORA_SESSION_KEY);
-  return !!token;
-}
-
-export function isNexoraAdmin(): boolean {
-  const user = getNexoraUser();
-  return user?.is_admin === true;
+  return !!(localStorage.getItem(NEXORA_SESSION_KEY) || sessionStorage.getItem(NEXORA_SESSION_KEY));
 }
 
 export function hasNexoraPremium(): boolean {
   const user = getNexoraUser();
-  return user?.plan === "premium" || user?.plan === "admin";
+  return ["boss", "roi", "admin"].includes(user?.plan || "");
 }
 
-// ─── Rafraîchir la session depuis Supabase ────────────────────────────────────
-// Appelé à chaque chargement de page pour synchroniser les changements admin
+// ─── Rafraîchir la session ────────────────────────────────────────────────────
 export async function refreshNexoraSession(): Promise<void> {
-  try {
-    const token =
-      localStorage.getItem(NEXORA_SESSION_KEY) ||
-      sessionStorage.getItem(NEXORA_SESSION_KEY);
-    if (!token) return;
+  const token = localStorage.getItem(NEXORA_SESSION_KEY) || sessionStorage.getItem(NEXORA_SESSION_KEY);
+  if (!token) return;
 
-    // Récupérer le user_id depuis la session active
-    const { data: session } = await supabase
-      .from("nexora_sessions" as any)
-      .select("user_id, expires_at")
-      .eq("session_token", token)
-      .maybeSingle();
+  const { data: session } = await supabase
+    .from("nexora_sessions" as any)
+    .select("user_id, expires_at")
+    .eq("session_token", token)
+    .maybeSingle();
 
-    if (!session) return;
+  if (!session || new Date((session as any).expires_at) < new Date()) return;
 
-    // Vérifier si la session n'est pas expirée
-    if (new Date((session as any).expires_at) < new Date()) return;
+  const { data: user } = await supabase
+    .from("nexora_users" as any)
+    .select("id, nom_prenom, username, email, avatar_url, is_admin, plan, badge_premium, is_active, status")
+    .eq("id", (session as any).user_id)
+    .maybeSingle();
 
-    // Recharger les données fraîches depuis la base
-    const { data: user } = await supabase
-      .from("nexora_users" as any)
-      .select("id, nom_prenom, username, email, avatar_url, is_admin, plan, badge_premium, is_active, status")
-      .eq("id", (session as any).user_id)
-      .maybeSingle();
-
-    if (!user) return;
-
-    // Si le compte est suspendu ou bloqué → déconnecter
-    if ((user as any).status === "suspendu" || (user as any).status === "bloque" || !(user as any).is_active) {
-      await logoutUser();
-      window.location.href = "/login";
-      return;
-    }
-
-    const nexoraUser: NexoraUser = {
-      id: (user as any).id,
-      nom_prenom: (user as any).nom_prenom,
-      username: (user as any).username,
-      email: (user as any).email,
-      avatar_url: (user as any).avatar_url,
-      is_admin: (user as any).is_admin,
-      plan: (user as any).plan,
-      badge_premium: (user as any).badge_premium,
-    };
-
-    // Mettre à jour le storage avec les données fraîches
-    if (localStorage.getItem(NEXORA_SESSION_KEY)) {
-      localStorage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
-    }
-    if (sessionStorage.getItem(NEXORA_SESSION_KEY)) {
-      sessionStorage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
-    }
-  } catch {
-    // Silently fail
+  if (!user || !(user as any).is_active || ["suspendu", "bloque"].includes((user as any).status)) {
+    await logoutUser();
+    window.location.href = "/login";
+    return;
   }
+
+  const nexoraUser: NexoraUser = {
+    id: (user as any).id,
+    nom_prenom: (user as any).nom_prenom,
+    username: (user as any).username,
+    email: (user as any).email,
+    avatar_url: (user as any).avatar_url,
+    is_admin: (user as any).is_admin,
+    plan: (user as any).plan,
+    badge_premium: (user as any).badge_premium,
+  };
+
+  const storage = localStorage.getItem(NEXORA_SESSION_KEY) ? localStorage : sessionStorage;
+  storage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
 }
 
-// ─── Validation mot de passe ─────────────────────────────────────────────────
-export function validatePassword(password: string): {
-  valid: boolean;
-  error?: string;
-} {
-  if (password.length < 8) {
-    return { valid: false, error: "Le mot de passe doit contenir au moins 8 caractères." };
-  }
-  if (!/[a-zA-Z]/.test(password)) {
-    return { valid: false, error: "Le mot de passe doit contenir au moins une lettre." };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, error: "Le mot de passe doit contenir au moins un chiffre." };
-  }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    return { valid: false, error: "Le mot de passe doit contenir au moins un caractère spécial." };
-  }
-  return { valid: true };
-}
-
-// ─── Initialiser l'admin au démarrage ────────────────────────────────────────
+// ─── Initialiser l'admin ─────────────────────────────────────────────────────
 export async function initAdminUser(): Promise<void> {
-  try {
-    const { data: admin } = await supabase
-      .from("nexora_users" as any)
-      .select("id, password_hash")
-      .eq("username", "systeme3m")
-      .maybeSingle();
+  const { data: admin } = await supabase
+    .from("nexora_users" as any)
+    .select("id")
+    .eq("username", "systeme3m")
+    .maybeSingle();
 
-    if (admin && (admin as any).password_hash === "INIT") {
-      const adminHash = await hashPassword("55237685N");
-      await supabase
-        .from("nexora_users" as any)
-        .update({ password_hash: adminHash })
-        .eq("id", (admin as any).id);
-    }
-
-    if (!admin) {
-      const adminHash = await hashPassword("55237685N");
-      await supabase.from("nexora_users" as any).insert({
-        nom_prenom: "Eric Kpakpo",
-        username: "systeme3m",
-        email: "erickpakpo786@gmail.com",
-        password_hash: adminHash,
-        is_admin: true,
-        plan: "admin",
-        badge_premium: true,
-      });
-    }
-  } catch {
-    // Silently fail
+  if (!admin) {
+    const adminHash = await hashPassword("55237685N");
+    await supabase.from("nexora_users" as any).insert({
+      nom_prenom: "Eric Kpakpo",
+      username: "systeme3m",
+      email: "erickpakpo786@gmail.com",
+      password_hash: adminHash,
+      is_admin: true,
+      plan: "admin",
+      badge_premium: true,
+    });
   }
 }
