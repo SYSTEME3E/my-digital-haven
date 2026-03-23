@@ -42,12 +42,14 @@ export default function HistoriquePage() {
 
   const loadAll = async () => {
     setLoading(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
     const [depRes, entRes] = await Promise.all([
-      supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false }).order("created_at", { ascending: false }),
-      supabase.from("entrees" as any).select("*").order("date_entree", { ascending: false }).order("created_at", { ascending: false }),
+      supabase.from("depenses").select("*").eq("user_id", userId).order("date_depense", { ascending: false }).order("created_at", { ascending: false }),
+      supabase.from("entrees").select("*").eq("user_id", userId).order("date_entree", { ascending: false }).order("created_at", { ascending: false }),
     ]);
-    setDepenses(depRes.data || []);
-    setEntrees(entRes.data || []);
+    setDepenses((depRes.data || []) as any);
+    setEntrees((entRes.data || []) as any);
     setLoading(false);
   };
 
