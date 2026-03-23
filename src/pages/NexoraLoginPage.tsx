@@ -11,20 +11,18 @@ type Mode = "login" | "register";
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
-    { label: "8 caractères minimum", ok: password.length >= 8 },
-    { label: "Une lettre", ok: /[a-zA-Z]/.test(password) },
-    { label: "Un chiffre", ok: /[0-9]/.test(password) },
-    { label: "Un caractère spécial", ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
+    { label: "8 caractères minimum",  ok: password.length >= 8 },
+    { label: "Une lettre",            ok: /[a-zA-Z]/.test(password) },
+    { label: "Un chiffre",            ok: /[0-9]/.test(password) },
+    { label: "Un caractère spécial",  ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
   ];
   return (
     <div className="mt-1 space-y-1">
       {checks.map((c) => (
         <div key={c.label} className="flex items-center gap-1.5 text-xs">
-          {c.ok ? (
-            <CheckCircle2 className="w-3 h-3 text-green-500" />
-          ) : (
-            <XCircle className="w-3 h-3 text-muted-foreground" />
-          )}
+          {c.ok
+            ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+            : <XCircle className="w-3 h-3 text-muted-foreground" />}
           <span className={c.ok ? "text-green-600" : "text-muted-foreground"}>{c.label}</span>
         </div>
       ))}
@@ -33,55 +31,67 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 export default function NexoraLoginPage() {
-  const [mode, setMode] = useState<Mode>("login");
-  const [loading, setLoading] = useState(false);
+  const [mode, setMode]           = useState<Mode>("login");
+  const [loading, setLoading]     = useState(false);
   const [pageReady, setPageReady] = useState(false);
 
   // Login fields
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [identifier, setIdentifier]       = useState("");
+  const [password, setPassword]           = useState("");
+  const [showPassword, setShowPassword]   = useState(false);
+  const [remember, setRemember]           = useState(false);
 
   // Register fields
-  const [nomPrenom, setNomPrenom] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [regPassword, setRegPassword] = useState("");
+  const [nomPrenom, setNomPrenom]             = useState("");
+  const [username, setUsername]               = useState("");
+  const [email, setEmail]                     = useState("");
+  const [regPassword, setRegPassword]         = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showRegPassword, setShowRegPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm, setShowConfirm]         = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     initAdminUser();
-    const ready = setTimeout(() => setPageReady(true), 800);
+
+    // ✅ FIX : si déjà connecté, rediriger IMMÉDIATEMENT sans attendre le splash
     if (isNexoraAuthenticated()) {
       navigate("/dashboard", { replace: true });
+      return; // ne pas lancer le splash du tout
     }
+
+    // Sinon afficher le splash normalement
+    const ready = setTimeout(() => setPageReady(true), 800);
     return () => clearTimeout(ready);
   }, []);
 
   // ── Splash screen
   if (!pageReady) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center"
         style={{
           background: "radial-gradient(ellipse at center, hsl(217 89% 20%) 0%, hsl(217 89% 10%) 100%)"
         }}>
         <div className="flex flex-col items-center gap-6">
-          <img src={nexoraLogo} alt="Nexora"
-            className="w-24 h-24 object-contain drop-shadow-2xl animate-pulse" />
+          <img
+            src={nexoraLogo}
+            alt="Nexora"
+            className="w-24 h-24 object-contain drop-shadow-2xl animate-pulse"
+          />
           <div className="text-3xl font-black text-white tracking-widest">NEXORA</div>
           <div className="flex gap-4 mt-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-5 h-5 rounded-full bg-yellow-400"
+              <div
+                key={i}
+                className="w-5 h-5 rounded-full bg-yellow-400"
                 style={{
                   animation: "bounce 0.7s ease-in-out infinite",
-                  animationDelay: `${i * 0.2}s`
-                }} />
+                  animationDelay: `${i * 0.2}s`,
+                }}
+              />
             ))}
           </div>
         </div>
@@ -108,7 +118,8 @@ export default function NexoraLoginPage() {
           title: `Bienvenue ${result.user.nom_prenom} !`,
           description: result.user.is_admin ? "Connexion administrateur" : "Connexion réussie",
         });
-        setTimeout(() => navigate("/dashboard", { replace: true }), 300);
+        // ✅ FIX : navigate direct, pas de setTimeout qui laisse une page blanche
+        navigate("/dashboard", { replace: true });
       } else {
         toast({ title: "Erreur de connexion", description: result.error, variant: "destructive" });
       }
@@ -143,9 +154,9 @@ export default function NexoraLoginPage() {
     try {
       const result = await registerUser({
         nom_prenom: nomPrenom.trim(),
-        username: username.trim(),
-        email: email.trim(),
-        password: regPassword,
+        username:   username.trim(),
+        email:      email.trim(),
+        password:   regPassword,
       });
       if (result.success) {
         toast({ title: "Compte créé !", description: "Vous pouvez maintenant vous connecter." });
@@ -164,7 +175,8 @@ export default function NexoraLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{
         background: "radial-gradient(ellipse at 60% 40%, hsl(217 89% 96%) 0%, hsl(217 30% 94%) 100%)"
       }}>
@@ -180,7 +192,6 @@ export default function NexoraLoginPage() {
       </div>
 
       <div className="w-full max-w-sm animate-fade-in-up relative z-10">
-
         <div className="bg-card border border-border rounded-2xl shadow-brand-lg overflow-hidden">
 
           {/* ── Header logo ── */}
@@ -197,8 +208,7 @@ export default function NexoraLoginPage() {
               <p className="text-white/70 text-xs mt-1">
                 {mode === "login"
                   ? "Connectez-vous à votre espace"
-                  : "Créez votre compte Nexora"
-                }
+                  : "Créez votre compte Nexora"}
               </p>
             </div>
           </div>
@@ -258,7 +268,9 @@ export default function NexoraLoginPage() {
                       placeholder="••••••••"
                       className="h-11 pr-12"
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -349,7 +361,9 @@ export default function NexoraLoginPage() {
                       placeholder="Mot de passe sécurisé"
                       className="h-10 pr-10"
                     />
-                    <button type="button" onClick={() => setShowRegPassword(!showRegPassword)}
+                    <button
+                      type="button"
+                      onClick={() => setShowRegPassword(!showRegPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -369,7 +383,9 @@ export default function NexoraLoginPage() {
                       placeholder="Confirmer"
                       className="h-10 pr-10"
                     />
-                    <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
