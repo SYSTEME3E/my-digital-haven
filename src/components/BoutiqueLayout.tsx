@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingBag, Settings,
-  Eye, ChevronRight, Menu, X, ArrowLeft, Store,
+  Eye, ChevronRight, Menu, X, ArrowLeft, Store, Wallet,
 } from "lucide-react";
 
 const boutiqueNav = [
-  { path: "/boutique", icon: LayoutDashboard, label: "Dashboard", color: "text-blue-400", bg: "bg-blue-400/10" },
-  { path: "/boutique/produits", icon: Package, label: "Produits", color: "text-purple-400", bg: "bg-purple-400/10" },
-  { path: "/boutique/commandes", icon: ShoppingBag, label: "Commandes", color: "text-orange-400", bg: "bg-orange-400/10" },
-  { path: "/boutique/parametres", icon: Settings, label: "Paramètres", color: "text-gray-400", bg: "bg-gray-400/10" },
+  { path: "/boutique",           icon: LayoutDashboard, label: "Dashboard",          color: "text-blue-400",   bg: "bg-blue-400/10"   },
+  { path: "/boutique/produits",  icon: Package,         label: "Produits",           color: "text-purple-400", bg: "bg-purple-400/10" },
+  { path: "/boutique/commandes", icon: ShoppingBag,     label: "Commandes",          color: "text-orange-400", bg: "bg-orange-400/10" },
+  { path: "/boutique/finances",  icon: Wallet,          label: "Finances & Retraits", color: "text-rose-400",   bg: "bg-rose-400/10"   }, // ✅ NOUVEAU
+  { path: "/boutique/parametres",icon: Settings,        label: "Paramètres",         color: "text-gray-400",   bg: "bg-gray-400/10"   },
 ];
 
 interface BoutiqueLayoutProps {
