@@ -3,39 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { getNexoraUser } from "@/lib/nexora-auth";
 import { 
   ShieldCheck, Wallet, ArrowUpRight, ArrowDownLeft, 
-  Lock, AlertTriangle, FileText, TrendingUp 
+  Lock, AlertTriangle, FileText, CheckCircle2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-
-// --- Données simulées pour le graphique (À remplacer par des données réelles plus tard) ---
-const genererDonneesGraphique = () => {
-  const donnees = [];
-  const maintenant = new Date();
-  let soldeSimule = 15000; // Solde de départ il y a 30 jours
-
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(maintenant);
-    date.setDate(maintenant.getDate() - i);
-    
-    // Simulation de variations (dépôts aléatoires)
-    if (Math.random() > 0.7) {
-        soldeSimule += Math.floor(Math.random() * 5000) + 1000;
-    }
-
-    donnees.push({
-      date: date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
-      solde: soldeSimule,
-    });
-  }
-  return donnees;
-};
-
-const donneesGraphique = genererDonneesGraphique();
-const soldeActuelBase = donneesGraphique[donneesGraphique.length - 1].solde;
-const maxSolde = Math.max(...donneesGraphique.map(d => d.solde), 1);
-
 
 export default function EpargneNexoraPage() {
   const user = getNexoraUser();
@@ -43,7 +15,6 @@ export default function EpargneNexoraPage() {
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"depot" | "retrait">("depot");
   const [accepteContrat, setAccepteContrat] = useState(false);
-  const [soldeActuel, setSoldeActuel] = useState(soldeActuelBase); // Utilise la simulation pour l'instant
 
   // --- LOGIQUE DE RETRAIT AVEC PÉNALITÉ DE 10% ---
   const handleRetrait = async () => {
@@ -52,18 +23,12 @@ export default function EpargneNexoraPage() {
       return;
     }
 
-    if (Number(montant) > soldeActuel) {
-        toast.error("Solde insuffisant dans votre coffre-fort.");
-        return;
-    }
-
     const penalite = Number(montant) * 0.10;
     const montantFinal = Number(montant) - penalite;
 
     setLoading(true);
     try {
-      // Logique d'insertion Database (Simulation ici, à relier à ta table réelle)
-      /*
+      // Logique d'insertion Database
       const { error } = await supabase.from("transactions_epargne").insert({
         user_id: user?.id,
         montant: Number(montant),
@@ -71,40 +36,17 @@ export default function EpargneNexoraPage() {
         type: "retrait",
         statut: "termine"
       });
+
       if (error) throw error;
-      */
 
-      // Mise à jour locale du solde (simulation)
-      setSoldeActuel(prev => prev - Number(montant));
-
-      toast.success(`Retrait réussi ! ${penalite.toLocaleString()} FCFA de pénalité appliqués (10%).`);
+      toast.success(`Retrait réussi ! ${penalite} FCFA de pénalité appliqués (10%).`);
       setMontant("");
     } catch (err) {
-      toast.error("Erreur lors du retrait. Veuillez réessayer.");
+      toast.error("Erreur lors du retrait. Vérifiez votre solde épargne.");
     } finally {
       setLoading(false);
     }
   };
-
-  // --- LOGIQUE DE DÉPÔT (SIMULATION) ---
-  const handleDepot = async () => {
-    if (!montant || Number(montant) < 300) {
-        toast.error("Le minimum de dépôt est de 300 XOF");
-        return;
-    }
-    setLoading(true);
-    try {
-        // Simulation de dépôt
-        setSoldeActuel(prev => prev + Number(montant));
-        toast.success(`Dépôt de ${Number(montant).toLocaleString()} FCFA réussi !`);
-        setMontant("");
-    } catch (err) {
-        toast.error("Erreur lors du dépôt.");
-    } finally {
-        setLoading(false);
-    }
-  };
-
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
@@ -115,7 +57,7 @@ export default function EpargneNexoraPage() {
           <Lock className="w-24 h-24" />
         </div>
         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Coffre-Fort Nexora</p>
-        <h2 className="text-4xl font-black mt-2">{soldeActuel.toLocaleString()} <span className="text-lg text-slate-500 uppercase">FCFA</span></h2>
+        <h2 className="text-4xl font-black mt-2">0 <span className="text-lg text-slate-500 uppercase">FCFA</span></h2>
         
         <div className="flex gap-3 mt-8">
           <Button 
@@ -132,41 +74,6 @@ export default function EpargneNexoraPage() {
           </Button>
         </div>
       </div>
-
-      {/* --- GRAPHIQUE D'ÉVOLUTION (30 JOURS) --- */}
-      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-        <div className="flex items-center gap-2 mb-5">
-            <TrendingUp className="w-5 h-5 text-blue-500" />
-            <h3 className="font-black text-gray-800 text-sm uppercase tracking-tight">Évolution (30 derniers jours)</h3>
-        </div>
-        <div className="flex items-end gap-1 h-28 w-full border-b border-gray-100 pb-1">
-            {donneesGraphique.map((d, i) => {
-                const hauteurPourcentage = (d.solde / maxSolde) * 100;
-                // Afficher seulement quelques labels pour ne pas surcharger
-                const afficherLabel = i === 0 || i === 14 || i === donneesGraphique.length - 1;
-
-                return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                        {/* Barre */}
-                        <div 
-                            className="w-full bg-blue-100 rounded-t-sm group-hover:bg-blue-500 transition-colors relative"
-                            style={{ height: `${hauteurPourcentage}%` }}
-                        >
-                            {/* Tooltip au survol */}
-                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none transition-opacity">
-                                {d.date} : {d.solde.toLocaleString()} FCFA
-                            </div>
-                        </div>
-                        {/* Label Date (caché par défaut, affiché pour certains) */}
-                        <span className={`text-[8px] text-gray-400 font-medium ${afficherLabel ? 'opacity-100' : 'opacity-0'}`}>
-                            {d.date}
-                        </span>
-                    </div>
-                );
-            })}
-        </div>
-      </div>
-
 
       {/* FORMULAIRE DÉPÔT / RETRAIT */}
       <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
@@ -204,7 +111,7 @@ export default function EpargneNexoraPage() {
           )}
 
           <Button 
-            onClick={view === "depot" ? handleDepot : handleRetrait} // Correction ici pour gérer les deux actions
+            onClick={view === "depot" ? undefined : handleRetrait}
             disabled={!accepteContrat || Number(montant) < (view === "depot" ? 300 : 100) || loading}
             className={`w-full h-14 rounded-2xl font-black text-lg shadow-lg ${view === 'depot' ? 'bg-black hover:bg-slate-800' : 'bg-pink-600 hover:bg-pink-700'}`}
           >
@@ -260,7 +167,7 @@ export default function EpargneNexoraPage() {
           <div className="space-y-2">
             <p className="font-black text-gray-800 uppercase text-[10px]">🔒 Sécurité et responsabilité</p>
             <p>NEXORA met en œuvre des mesures de sécurité avancées pour protéger vos fonds et vos données.</p>
-            <p>Toutefois, en utilisant ce service, you acceptez que :</p>
+            <p>Toutefois, en utilisant ce service, vous acceptez que :</p>
             <ul className="list-disc ml-5">
               <li>Vous êtes responsable de vos décisions financières</li>
               <li>Vous utilisez cette fonctionnalité de manière consciente et volontaire</li>
