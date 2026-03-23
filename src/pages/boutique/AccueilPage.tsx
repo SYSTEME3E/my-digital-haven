@@ -3,25 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import BoutiqueLayout from "@/components/BoutiqueLayout";
 import {
   ShoppingBag, Package, TrendingUp, Clock,
-  CheckCircle, Truck, XCircle, BarChart2
+  CheckCircle, Truck, XCircle, BarChart2,
+  Zap, Crown, Lock, ShieldCheck
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getNexoraUser, PLAN_LIMITS } from "@/lib/nexora-auth";
 
 type Periode = "jour" | "semaine" | "mois";
 
-interface Stat {
-  label: string;
-  valeur: number | string;
-  icon: any;
-  color: string;
-  bg: string;
-}
-
-function formatMontant(amount: number, devise: string = "XOF"): string {
-  if (devise === "USD") return `$${amount.toFixed(2)}`;
-  return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA";
-}
-
 export default function BoutiqueAccueilPage() {
+  const user = getNexoraUser();
   const [boutique, setBoutique] = useState<any>(null);
   const [commandes, setCommandes] = useState<any[]>([]);
   const [produits, setProduits] = useState<any[]>([]);
@@ -53,54 +44,39 @@ export default function BoutiqueAccueilPage() {
 
   useEffect(() => { load(); }, []);
 
-  // Filtrer par période
+  // --- LOGIQUE DE FILTRAGE ---
   const filtrerParPeriode = (liste: any[]) => {
     const now = new Date();
     return liste.filter(c => {
       const date = new Date(c.created_at);
-      if (periode === "jour") {
-        return date.toDateString() === now.toDateString();
-      } else if (periode === "semaine") {
-        const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
-        return diff <= 7;
-      } else {
-        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      }
+      if (periode === "jour") return date.toDateString() === now.toDateString();
+      if (periode === "semaine") return (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24) <= 7;
+      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     });
   };
 
   const commandesFiltrees = filtrerParPeriode(commandes);
   const totalMontant = commandesFiltrees.reduce((sum, c) => sum + (c.total || 0), 0);
-
-  // Stats par statut
   const parStatut = (statut: string) => commandes.filter(c => c.statut === statut).length;
 
-  // Top produits vendus
-  const topProduits = () => {
-    const compteur: Record<string, { nom: string; quantite: number; montant: number }> = {};
-    commandes.forEach(cmd => {
-      (cmd.articles_commande || []).forEach((art: any) => {
-        if (!compteur[art.produit_id]) {
-          compteur[art.produit_id] = { nom: art.nom_produit, quantite: 0, montant: 0 };
-        }
-        compteur[art.produit_id].quantite += art.quantite;
-        compteur[art.produit_id].montant += art.montant;
-      });
-    });
-    return Object.values(compteur).sort((a, b) => b.quantite - a.quantite).slice(0, 5);
-  };
+  // Séparation Physique vs Digital
+  const produitsPhysiques = produits.filter(p => p.type === 'physique' || !p.type).length;
+  const produitsDigitaux = produits.filter(p => p.type === 'digital').length;
+  
+  // Limites de Plan
+  const planActuel = user?.plan || 'gratuit';
+  const limiteProduits = PLAN_LIMITS[planActuel].produits;
+  const estBloque = produits.length >= limiteProduits;
 
-  // Graphique par jour (7 derniers jours)
+  // Graphique
   const graphData = () => {
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateStr = date.toDateString();
-      const cmdsJour = commandes.filter(c => new Date(c.created_at).toDateString() === dateStr);
+      const cmdsJour = commandes.filter(c => new Date(c.created_at).toDateString() === date.toDateString());
       days.push({
-        label: date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }),
-        commandes: cmdsJour.length,
+        label: date.toLocaleDateString("fr-FR", { weekday: "short" }),
         montant: cmdsJour.reduce((sum, c) => sum + (c.total || 0), 0),
       });
     }
@@ -120,34 +96,32 @@ export default function BoutiqueAccueilPage() {
 
   if (!boutique) return (
     <BoutiqueLayout>
-      <div className="text-center py-20">
-        <p className="text-4xl mb-4">🏪</p>
-        <h2 className="text-xl font-bold text-gray-800">Boutique non configurée</h2>
-        <p className="text-gray-500 mt-2">Allez dans Paramètres pour créer votre boutique</p>
-        <a href="/boutique/parametres"
-          className="mt-4 inline-block bg-pink-500 text-white px-6 py-3 rounded-xl font-semibold">
-          Configurer ma boutique
-        </a>
+      <div className="text-center py-20 px-6">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">🏪</div>
+        <h2 className="text-xl font-black text-gray-800">Boutique non configurée</h2>
+        <p className="text-gray-500 mt-2 text-sm">Créez votre boutique pour commencer à vendre.</p>
+        <Button className="mt-6 bg-pink-500 hover:bg-pink-600 rounded-2xl h-12 px-8 font-bold shadow-lg shadow-pink-200">
+          <a href="/boutique/parametres">Configurer ma boutique</a>
+        </Button>
       </div>
     </BoutiqueLayout>
   );
 
   return (
     <BoutiqueLayout boutiqueName={boutique?.nom} boutiqueSlug={boutique?.slug}>
-      <div className="space-y-6">
+      <div className="space-y-6 pb-12">
 
-        {/* Header */}
+        {/* 1. HEADER & SÉLECTEUR DE PÉRIODE */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-gray-800">Dashboard</h1>
-            <p className="text-sm text-gray-500">Bienvenue dans votre boutique</p>
+            <h1 className="text-2xl font-black text-gray-800 tracking-tight">Tableau de bord</h1>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Analyse de votre activité</p>
           </div>
-          {/* Période */}
           <div className="flex bg-gray-100 rounded-xl p-1">
             {(["jour", "semaine", "mois"] as Periode[]).map(p => (
               <button key={p} onClick={() => setPeriode(p)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors capitalize ${
-                  periode === p ? "bg-white text-pink-600 shadow" : "text-gray-500"
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all capitalize ${
+                  periode === p ? "bg-white text-pink-600 shadow-sm" : "text-gray-500"
                 }`}>
                 {p}
               </button>
@@ -155,161 +129,106 @@ export default function BoutiqueAccueilPage() {
           </div>
         </div>
 
-        {/* Stats principales */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
-                <ShoppingBag className="w-4 h-4 text-pink-600" />
-              </div>
-              <p className="text-xs text-gray-500 font-medium">Commandes</p>
+        {/* 2. BANNIÈRE ABONNEMENT DYNAMIQUE */}
+        <div className={`p-5 rounded-[2rem] flex items-center justify-between relative overflow-hidden transition-all ${
+          planActuel === 'roi' ? 'bg-gradient-to-br from-amber-400 to-yellow-600 text-white border-none shadow-xl shadow-yellow-100' :
+          planActuel === 'boss' ? 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-none shadow-xl shadow-blue-100' :
+          'bg-white border border-gray-100 shadow-sm'
+        }`}>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className={`p-3 rounded-2xl ${planActuel === 'gratuit' ? 'bg-gray-100' : 'bg-white/20'}`}>
+              {planActuel === 'roi' ? <Crown className="w-6 h-6" /> : <Zap className={`w-6 h-6 ${planActuel === 'gratuit' ? 'text-gray-400' : ''}`} />}
             </div>
-            <p className="text-3xl font-black text-gray-800">{commandesFiltrees.length}</p>
-            <p className="text-xs text-gray-400 mt-1">ce{periode === "jour" ? "tte journée" : periode === "semaine" ? "tte semaine" : " mois"}</p>
+            <div>
+              <p className="text-[10px] opacity-70 font-black uppercase tracking-widest">Plan Actuel</p>
+              <h2 className="text-lg font-black capitalize tracking-tight">{planActuel}</h2>
+            </div>
           </div>
-
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-              </div>
-              <p className="text-xs text-gray-500 font-medium">Revenus</p>
-            </div>
-            <p className="text-2xl font-black text-gray-800">
-              {Math.round(totalMontant).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">{boutique.devise || "FCFA"}</p>
+          <div className="text-right relative z-10">
+            <p className="text-[10px] font-bold">Produits : {produits.length} / {limiteProduits === Infinity ? '∞' : limiteProduits}</p>
+            <Button size="sm" className="h-7 text-[9px] mt-2 bg-white text-black hover:bg-gray-100 font-bold rounded-full border-none shadow-sm">
+              AMÉLIORER
+            </Button>
           </div>
-
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Package className="w-4 h-4 text-blue-600" />
-              </div>
-              <p className="text-xs text-gray-500 font-medium">Produits</p>
-            </div>
-            <p className="text-3xl font-black text-gray-800">{produits.length}</p>
-            <p className="text-xs text-gray-400 mt-1">{produits.filter(p => p.actif).length} actifs</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-yellow-600" />
-              </div>
-              <p className="text-xs text-gray-500 font-medium">En attente</p>
-            </div>
-            <p className="text-3xl font-black text-gray-800">{parStatut("nouvelle")}</p>
-            <p className="text-xs text-gray-400 mt-1">à traiter</p>
+          <div className="absolute -right-4 -bottom-4 opacity-10">
+             {planActuel === 'roi' ? <Crown className="w-24 h-24" /> : <ShieldCheck className="w-24 h-24" />}
           </div>
         </div>
 
-        {/* Statuts commandes */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="font-bold text-gray-800 mb-3">Statuts des commandes</p>
-          <div className="space-y-2">
-            {[
-              { label: "Nouvelle", statut: "nouvelle", color: "bg-blue-500", icon: ShoppingBag },
-              { label: "Confirmée", statut: "confirmee", color: "bg-purple-500", icon: CheckCircle },
-              { label: "En préparation", statut: "en_preparation", color: "bg-yellow-500", icon: Package },
-              { label: "Expédiée", statut: "expediee", color: "bg-orange-500", icon: Truck },
-              { label: "Livrée", statut: "livree", color: "bg-green-500", icon: CheckCircle },
-              { label: "Annulée", statut: "annulee", color: "bg-red-400", icon: XCircle },
-            ].map(s => {
-              const count = parStatut(s.statut);
-              const pct = commandes.length > 0 ? (count / commandes.length) * 100 : 0;
-              return (
-                <div key={s.statut} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-28 flex-shrink-0">{s.label}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-2">
-                    <div className={`h-2 rounded-full ${s.color} transition-all`}
-                      style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className="text-xs font-bold text-gray-700 w-6 text-right">{count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Graphique 7 derniers jours */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart2 className="w-5 h-5 text-pink-500" />
-            <p className="font-bold text-gray-800">7 derniers jours</p>
-          </div>
-          <div className="flex items-end gap-2 h-32">
-            {graph.map((d, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-xs text-gray-500 font-medium">
-                  {d.commandes > 0 ? d.commandes : ""}
-                </span>
-                <div className="w-full rounded-t-lg bg-pink-100 relative overflow-hidden"
-                  style={{ height: `${Math.max((d.montant / maxMontant) * 100, d.commandes > 0 ? 10 : 4)}%` }}>
-                  <div className="absolute inset-0 bg-pink-500 opacity-80" />
-                </div>
-                <span className="text-xs text-gray-400 text-center leading-tight">{d.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top produits */}
-        {topProduits().length > 0 && (
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <p className="font-bold text-gray-800 mb-3">🏆 Top produits vendus</p>
-            <div className="space-y-2">
-              {topProduits().map((p, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white ${
-                      i === 0 ? "bg-yellow-400" : i === 1 ? "bg-gray-400" : i === 2 ? "bg-orange-400" : "bg-gray-200"
-                    }`}>{i + 1}</span>
-                    <span className="text-sm font-medium text-gray-700 truncate max-w-40">{p.nom}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-pink-600">{p.quantite} vendus</p>
-                    <p className="text-xs text-gray-400">
-                      {Math.round(p.montant).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} {boutique.devise || "FCFA"}
-                    </p>
-                  </div>
-                </div>
-              ))}
+        {/* 3. ALERTE DE LIMITE (SI PLEIN) */}
+        {estBloque && (
+          <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-3 animate-pulse">
+            <Lock className="w-5 h-5 text-red-500" />
+            <div className="flex-1">
+              <p className="text-xs font-black text-red-700 uppercase">Limite de produits atteinte !</p>
+              <p className="text-[10px] text-red-600">Passez au plan **BOSS** pour débloquer plus d'espace.</p>
             </div>
           </div>
         )}
 
-        {/* Dernières commandes */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="font-bold text-gray-800 mb-3">Dernières commandes</p>
-          {commandes.length === 0 ? (
-            <div className="text-center py-8">
-              <ShoppingBag className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p className="text-gray-400 text-sm">Aucune commande pour l'instant</p>
+        {/* 4. SÉPARATION PHYSIQUE VS DIGITAL */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group">
+             <div className="absolute -right-2 -bottom-2 opacity-5">
+                <Package className="w-16 h-16" />
+             </div>
+             <p className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">Boutique Physique</p>
+             <p className="text-3xl font-black text-gray-800">{produitsPhysiques}</p>
+             <p className="text-[9px] text-gray-400 font-bold mt-1">Articles réels</p>
+          </div>
+          <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group">
+             <div className="absolute -right-2 -bottom-2 opacity-5 text-pink-600">
+                <Zap className="w-16 h-16" />
+             </div>
+             <p className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">Boutique Digitale</p>
+             <p className="text-3xl font-black text-pink-600">{produitsDigitaux}</p>
+             <p className="text-[9px] text-gray-400 font-bold mt-1">Services & PDF</p>
+          </div>
+        </div>
+
+        {/* 5. STATS REVENUS & COMMANDES */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-pink-100 flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-pink-600" />
+              </div>
+              <p className="text-[10px] text-gray-500 font-black uppercase">Ventes</p>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {commandes.slice(0, 5).map(cmd => (
-                <div key={cmd.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">{cmd.client_nom}</p>
-                    <p className="text-xs text-gray-400">#{cmd.numero} • {new Date(cmd.created_at).toLocaleDateString("fr-FR")}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-pink-600">
-                      {Math.round(cmd.total).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} {boutique.devise || "FCFA"}
-                    </p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      cmd.statut === "nouvelle" ? "bg-blue-100 text-blue-700" :
-                      cmd.statut === "livree" ? "bg-green-100 text-green-700" :
-                      cmd.statut === "annulee" ? "bg-red-100 text-red-700" :
-                      "bg-yellow-100 text-yellow-700"
-                    }`}>{cmd.statut}</span>
-                  </div>
+            <p className="text-3xl font-black text-gray-800">{commandesFiltrees.length}</p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+              </div>
+              <p className="text-[10px] text-gray-500 font-black uppercase">Revenus</p>
+            </div>
+            <p className="text-2xl font-black text-gray-800 leading-none">
+              {Math.round(totalMontant).toLocaleString()}
+            </p>
+            <p className="text-[9px] text-gray-400 font-bold mt-1 uppercase">{boutique.devise || "FCFA"}</p>
+          </div>
+        </div>
+
+        {/* 6. GRAPHIQUE DE PERFORMANCE */}
+        <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <BarChart2 className="w-5 h-5 text-pink-500" />
+            <p className="font-black text-gray-800 text-xs uppercase tracking-widest">Performance (7 jours)</p>
+          </div>
+          <div className="flex items-end gap-3 h-32">
+            {graph.map((d, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full rounded-t-xl bg-pink-50 relative group cursor-pointer"
+                  style={{ height: `${Math.max((d.montant / maxMontant) * 100, 8)}%` }}>
+                  <div className="absolute inset-0 bg-pink-500 opacity-70 group-hover:opacity-100 transition-all rounded-t-xl" />
                 </div>
-              ))}
-            </div>
-          )}
+                <span className="text-[9px] text-gray-400 font-black uppercase">{d.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
       </div>
