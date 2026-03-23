@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatAmount, convertAmount, playSuccessSound, getWeekNumber, getMondayOfWeek } from "@/lib/app-utils";
+import { getNexoraUser } from "@/lib/nexora-auth";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,9 @@ export default function DepensesPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const user = getNexoraUser();
+  const userId = user?.id;
+
   const now = new Date();
   const today = now.toISOString().split("T")[0];
   const weekNum = getWeekNumber(now);
@@ -51,11 +55,12 @@ export default function DepensesPage() {
     categorie: "Alimentation", note: "", date_depense: today
   });
 
-  useEffect(() => { loadDepenses(); }, []);
+  useEffect(() => { if (userId) loadDepenses(); }, [userId]);
 
   const loadDepenses = async () => {
+    if (!userId) return;
     setLoading(true);
-    const { data } = await supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false }).order("created_at", { ascending: false });
+    const { data } = await supabase.from("depenses").select("*").eq("user_id", userId).order("date_depense", { ascending: false }).order("created_at", { ascending: false });
     setDepenses(data || []);
     setLoading(false);
   };
@@ -85,11 +90,12 @@ export default function DepensesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.titre || !form.montant) return;
-    const { error } = await supabase.from("depenses" as any).insert({
+    if (!form.titre || !form.montant || !userId) return;
+    const { error } = await supabase.from("depenses").insert([{
       titre: form.titre, montant: parseFloat(form.montant), devise: form.devise,
       categorie: form.categorie, note: form.note || null, date_depense: form.date_depense,
-    });
+      user_id: userId,
+    }]);
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
@@ -102,8 +108,8 @@ export default function DepensesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cette dépense ?")) return;
-    await supabase.from("depenses" as any).delete().eq("id", id);
+    if (!confirm("Supprimer cette dépense ?") || !userId) return;
+    await supabase.from("depenses").delete().eq("id", id).eq("user_id", userId);
     toast({ title: "Supprimé" });
     loadDepenses();
   };
@@ -236,7 +242,7 @@ export default function DepensesPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-2 bg-destructive-bg border border-destructive/20 rounded-xl p-4 flex items-center gap-4">
+          <div className="sm:col-span-2 bg-destructive/5 border border-destructive/20 rounded-xl p-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
               <TrendingDown className="w-6 h-6 text-destructive" />
             </div>
@@ -246,11 +252,11 @@ export default function DepensesPage() {
               <div className="text-xs text-muted-foreground">{filtered.length} dépense(s)</div>
             </div>
           </div>
-          <div className="bg-accent-bg border border-accent/20 rounded-xl p-4 flex items-center gap-4">
-            <BarChart2 className="w-8 h-8 text-accent-foreground" />
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
+            <BarChart2 className="w-8 h-8 text-muted-foreground" />
             <div>
               <div className="text-sm text-muted-foreground">Équiv. USD</div>
-              <div className="font-display font-bold text-xl text-accent-foreground">{formatAmount(convertAmount(totalXOF, "XOF", "USD"), "USD")}</div>
+              <div className="font-display font-bold text-xl">{formatAmount(convertAmount(totalXOF, "XOF", "USD"), "USD")}</div>
             </div>
           </div>
         </div>
@@ -289,7 +295,7 @@ export default function DepensesPage() {
                           {d.note && <div className="text-xs text-muted-foreground">{d.note}</div>}
                         </td>
                         <td className="px-4 py-3 hidden sm:table-cell">
-                          <span className="bg-primary-bg text-primary text-xs font-semibold px-2 py-0.5 rounded-full">{d.categorie}</span>
+                          <span className="bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">{d.categorie}</span>
                         </td>
                         <td className="px-4 py-3 text-right font-medium">{Number(d.montant).toLocaleString()} {d.devise}</td>
                         <td className="px-4 py-3 text-right font-bold text-destructive hidden md:table-cell">{fmt(montantXOF)}</td>
