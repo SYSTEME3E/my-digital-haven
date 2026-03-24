@@ -60,7 +60,7 @@ export default function AppLayout({ children, searchQuery = "", onSearchChange }
   const navItems    = getNavItems(adminUser);
 
   const displayName = nexoraUser?.nom_prenom || "Eric Kpakpo";
-  const displayRole = nexoraUser?.is_admin ? "Administrateur" : nexoraUser?.plan === "premium" ? "Premium" : "Gratuit";
+  const displayRole = nexoraUser?.is_admin ? "Administrateur" : (nexoraUser?.plan === "boss" || nexoraUser?.plan === "roi") ? "Premium" : "Gratuit";
   const hasBadge    = nexoraUser?.badge_premium || nexoraUser?.is_admin;
   const isAdminPage = location.pathname === "/admin";
   const canGoBack   = location.pathname !== "/dashboard";
