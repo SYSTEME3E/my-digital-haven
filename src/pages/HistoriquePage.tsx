@@ -42,7 +42,8 @@ export default function HistoriquePage() {
 
   const loadAll = async () => {
     setLoading(true);
-    const userId = getNexoraUser()?.id;
+    const user = getNexoraUser();
+    const userId = user?.id;
     if (!userId) { setLoading(false); return; }
     const [depRes, entRes] = await Promise.all([
       supabase.from("depenses").select("*").eq("user_id", userId).order("date_depense", { ascending: false }).order("created_at", { ascending: false }),
