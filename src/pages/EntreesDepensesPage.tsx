@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatAmount, convertAmount, playSuccessSound } from "@/lib/app-utils";
-import { hasNexoraPremium } from "@/lib/nexora-auth";
+import { hasNexoraPremium, getNexoraUser } from "@/lib/nexora-auth";
 import { useNavigate } from "react-router-dom";
 
 type Devise = "XOF" | "USD";
