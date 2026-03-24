@@ -205,7 +205,7 @@ export default function AdminPanelPage() {
 
       setStats({
         totalUsers: u.length,
-        premiumUsers: u.filter(x => x.plan === "premium").length,
+        premiumUsers: u.filter(x => x.plan === "boss" || x.plan === "roi").length,
         gratuitUsers: u.filter(x => x.plan === "gratuit").length,
         adminUsers: u.filter(x => x.is_admin).length,
         activeUsers: u.filter(x => x.status === "actif").length,
