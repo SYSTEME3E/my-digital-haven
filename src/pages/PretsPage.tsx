@@ -264,9 +264,11 @@ export default function PretsPage() {
 
   const load = async () => {
     setLoading(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
     const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("prets" as any).select("*").order("created_at", { ascending: false }),
-      supabase.from("remboursements" as any).select("*").order("date_remboursement", { ascending: false }),
+      supabase.from("prets" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("remboursements" as any).select("*").eq("user_id", userId).order("date_remboursement", { ascending: false }),
     ]);
     setPrets((p as unknown as Pret[]) || []);
     setRemboursements((r as unknown as Remboursement[]) || []);
