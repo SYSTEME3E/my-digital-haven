@@ -674,7 +674,7 @@ export default function AdminPanelPage() {
                           </div>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          {user.plan !== "premium" && !user.is_admin && (
+                          {user.plan !== "boss" && user.plan !== "roi" && !user.is_admin && (
                             <button onClick={() => { setActionModal({ type: "activer_premium", target: user, targetType: "user" }); setActionReason(""); setPremiumDays("30"); }}
                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 font-medium transition-colors">
                               <Crown className="w-3.5 h-3.5" /> Activer Premium
