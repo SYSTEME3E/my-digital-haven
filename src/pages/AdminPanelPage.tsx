@@ -91,9 +91,10 @@ const STATUS_CONFIG = {
   bloque:   { label: "Bloqué",   color: "text-red-700",    bg: "bg-red-100",    icon: XCircle       },
 };
 
-const PLAN_CONFIG = {
+const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   gratuit: { label: "Gratuit", color: "text-gray-600",   bg: "bg-gray-100"   },
-  premium: { label: "Premium", color: "text-violet-700", bg: "bg-violet-100" },
+  boss:    { label: "Boss",    color: "text-blue-700",    bg: "bg-blue-100"   },
+  roi:     { label: "Roi",     color: "text-violet-700",  bg: "bg-violet-100" },
   admin:   { label: "Admin",   color: "text-amber-700",  bg: "bg-amber-100"  },
 };
 
