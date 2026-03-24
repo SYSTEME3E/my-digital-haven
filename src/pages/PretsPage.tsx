@@ -301,9 +301,12 @@ export default function PretsPage() {
       return;
     }
 
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("prets" as any).insert({
       type: activeTab,
       nom_personne: form.nom_personne,
+      user_id: userId,
       montant: parseFloat(form.montant),
       devise: form.devise,
       objectif: form.objectif,
