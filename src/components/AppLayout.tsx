@@ -7,7 +7,7 @@ import {
   ShieldCheck, ArrowLeftRight // ✅ Import ajouté
 } from "lucide-react";
 import { clearSession, isAdminUser } from "@/lib/app-utils";
-import { logoutUser, getNexoraUser, isNexoraAdmin, refreshNexoraSession } from "@/lib/nexora-auth";
+import { logoutUser, getNexoraUser, isNexoraAdmin, refreshNexoraSession, type NexoraPlan } from "@/lib/nexora-auth";
 import { Input } from "@/components/ui/input";
 import { ReactNode } from "react";
 import nexoraLogo from "@/assets/nexora-logo.png";
