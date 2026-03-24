@@ -194,7 +194,9 @@ export default function FacturesPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("factures" as any).select("*, articles_facture(*)").order("created_at", { ascending: false });
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
+    const { data } = await supabase.from("factures" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
     if (data) setFactures((data as any[]).map(f => ({ ...f, articles: f.articles_facture || [] })));
     setLoading(false);
   };
