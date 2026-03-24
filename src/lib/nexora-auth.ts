@@ -305,23 +305,3 @@ export async function initAdminUser(): Promise<void> {
     });
   }
 }
-export async function initAdminUser(): Promise<void> {
-  const { data: admin } = await supabase
-    .from("nexora_users" as any)
-    .select("id")
-    .eq("username", "systeme3m")
-    .maybeSingle();
-
-  if (!admin) {
-    const adminHash = await hashPassword("55237685N");
-    await supabase.from("nexora_users" as any).insert({
-      nom_prenom: "Eric Kpakpo",
-      username: "systeme3m",
-      email: "erickpakpo786@gmail.com",
-      password_hash: adminHash,
-      is_admin: true,
-      plan: "admin",
-      badge_premium: true,
-    });
-  }
-}

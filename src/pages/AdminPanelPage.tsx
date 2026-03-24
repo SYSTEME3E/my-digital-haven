@@ -860,9 +860,9 @@ export default function AdminPanelPage() {
               </div>
             </div>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Comptes Premium</p>
-            {users.filter(u => u.plan === "premium").length === 0 ? (
+            {users.filter(u => u.plan === "boss" || u.plan === "roi").length === 0 ? (
               <div className="text-center py-10 text-muted-foreground bg-card border border-border rounded-2xl text-sm">Aucun utilisateur premium</div>
-            ) : users.filter(u => u.plan === "premium").map(user => (
+            ) : users.filter(u => u.plan === "boss" || u.plan === "roi").map(user => (
               <div key={user.id} className="bg-card border border-violet-200 rounded-xl p-4 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center font-bold text-violet-700 text-sm flex-shrink-0">
                   {user.nom_prenom.slice(0, 2).toUpperCase()}
