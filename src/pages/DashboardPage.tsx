@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const nexoraUser = getNexoraUser();
   const displayName = nexoraUser?.nom_prenom?.split(" ")[0] || "Eric";
   const hasBadge = nexoraUser?.badge_premium || nexoraUser?.is_admin;
-  const isPremium = nexoraUser?.plan === "premium" || nexoraUser?.plan === "admin";
+  const isPremium = nexoraUser?.plan === "boss" || nexoraUser?.plan === "roi" || nexoraUser?.plan === "admin";
 
   useEffect(() => {
     loadStats();
