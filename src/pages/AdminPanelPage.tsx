@@ -631,7 +631,7 @@ export default function AdminPanelPage() {
                     </div>
                     {isExpanded && (
                       <div className="border-t border-border bg-muted/30 p-4 space-y-4">
-                        {user.plan === "premium" && (
+                        {(user.plan === "boss" || user.plan === "roi") && (
                           <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 text-sm">
                             <p className="font-semibold text-violet-700 mb-1">Premium</p>
                             <p className="text-xs text-violet-600">Depuis : {fmtDate(user.premium_since)}</p>
