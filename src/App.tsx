@@ -23,13 +23,14 @@ import PretsPage from "@/pages/PretsPage";
 import InvestissementsPage from "@/pages/InvestissementsPage";
 import FacturesPage from "@/pages/FacturesPage";
 import EntreesDepensesPage from "@/pages/EntreesDepensesPage";
+import TransfertPage from "@/pages/TransfertPage"; // ✅ NEXORA TRANSFERT
 
 // Boutique
 import BoutiqueAccueilPage from "@/pages/boutique/AccueilPage";
 import BoutiqueProduitsPage from "@/pages/boutique/ProduitsPage";
 import CommandesPage from "@/pages/boutique/CommandesPage";
 import BoutiqueParametresPage from "@/pages/boutique/ParametresPage";
-import DigitalFinancePage from "@/pages/boutique/DigitalFinancePage"; // ✅ NOUVEAU
+import DigitalFinancePage from "@/pages/boutique/DigitalFinancePage"; // ✅ FINANCES DIGITALES
 import BoutiqueVitrinePage from "@/pages/boutique/VitrinePage";
 import ProduitDetailPage from "@/pages/boutique/ProduitDetailPage";
 
@@ -134,6 +135,7 @@ const App = () => (
           <Route path="/liens"            element={<ProtectedPage><LiensPage /></ProtectedPage>} />
           <Route path="/profil"           element={<ProtectedPage><ProfilPage /></ProtectedPage>} />
           <Route path="/abonnement"       element={<ProtectedPage><AbonnementPage /></ProtectedPage>} />
+          <Route path="/transfert"        element={<ProtectedPage><TransfertPage /></ProtectedPage>} /> {/* ✅ NEXORA TRANSFERT */}
 
           {/* ── LIMITÉ gratuit / illimité premium ── */}
           <Route path="/factures"         element={<ProtectedPage><FacturesPage /></ProtectedPage>} />
@@ -149,7 +151,7 @@ const App = () => (
           <Route path="/boutique/produits"    element={<PremiumPage><BoutiqueProduitsPage /></PremiumPage>} />
           <Route path="/boutique/commandes"   element={<PremiumPage><CommandesPage /></PremiumPage>} />
           <Route path="/boutique/parametres"  element={<PremiumPage><BoutiqueParametresPage /></PremiumPage>} />
-          <Route path="/boutique/finances"    element={<PremiumPage><DigitalFinancePage /></PremiumPage>} /> {/* ✅ NOUVEAU */}
+          <Route path="/boutique/finances"    element={<PremiumPage><DigitalFinancePage /></PremiumPage>} /> {/* ✅ FINANCES DIGITALES */}
 
           {/* ── VITRINE PUBLIQUE ── */}
           <Route path="/shop/:slug"                    element={<BoutiqueVitrinePage />} />
