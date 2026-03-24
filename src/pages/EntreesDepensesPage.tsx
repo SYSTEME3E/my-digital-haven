@@ -269,7 +269,9 @@ function DepensesContent() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false });
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
+    const { data } = await supabase.from("depenses" as any).select("*").eq("user_id", userId).order("date_depense", { ascending: false });
     setDepenses(data || []);
     setLoading(false);
   };
