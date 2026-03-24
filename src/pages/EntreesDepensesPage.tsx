@@ -121,9 +121,11 @@ function EntreesContent() {
     }
     if (!form.titre || !form.montant) { toast({ title: "Titre et montant requis", variant: "destructive" }); return; }
     setSaving(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("entrees" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), categorie: form.categorie,
-      devise: form.devise, date_entree: form.date_entree, note: form.note || null
+      devise: form.devise, date_entree: form.date_entree, note: form.note || null, user_id: userId
     });
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
