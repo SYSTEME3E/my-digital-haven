@@ -101,7 +101,9 @@ function EntreesContent() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("entrees" as any).select("*").order("date_entree", { ascending: false });
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
+    const { data } = await supabase.from("entrees" as any).select("*").eq("user_id", userId).order("date_entree", { ascending: false });
     setEntrees(data || []);
     setLoading(false);
   };
