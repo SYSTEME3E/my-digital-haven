@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatAmount, convertAmount, getWeekNumber, getMondayOfWeek } from "@/lib/app-utils";
 import AppLayout from "@/components/AppLayout";
 import { TrendingDown, TrendingUp, Calendar, Clock, Filter, ChevronDown } from "lucide-react";
+import { getNexoraUser } from "@/lib/nexora-auth";
 
 type Devise = "XOF" | "USD";
 type TabType = "tout" | "depenses" | "entrees";
@@ -42,7 +43,8 @@ export default function HistoriquePage() {
 
   const loadAll = async () => {
     setLoading(true);
-    const userId = getNexoraUser()?.id;
+    const user = getNexoraUser();
+    const userId = user?.id;
     if (!userId) { setLoading(false); return; }
     const [depRes, entRes] = await Promise.all([
       supabase.from("depenses").select("*").eq("user_id", userId).order("date_depense", { ascending: false }).order("created_at", { ascending: false }),

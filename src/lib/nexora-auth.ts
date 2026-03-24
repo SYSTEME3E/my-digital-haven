@@ -270,6 +270,20 @@ export async function refreshNexoraSession(): Promise<void> {
   storage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
 }
 
+// ─── Vérifier admin ──────────────────────────────────────────────────────────
+export function isNexoraAdmin(): boolean {
+  const user = getNexoraUser();
+  return user?.is_admin === true;
+}
+
+// ─── Valider mot de passe ────────────────────────────────────────────────────
+export function validatePassword(password: string): { valid: boolean; error?: string } {
+  if (password.length < 8) return { valid: false, error: "Minimum 8 caractères" };
+  if (!/[a-zA-Z]/.test(password)) return { valid: false, error: "Au moins une lettre" };
+  if (!/[0-9]/.test(password)) return { valid: false, error: "Au moins un chiffre" };
+  return { valid: true };
+}
+
 // ─── Initialiser l'admin ─────────────────────────────────────────────────────
 export async function initAdminUser(): Promise<void> {
   const { data: admin } = await supabase

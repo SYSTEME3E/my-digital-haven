@@ -22,7 +22,7 @@ interface NexoraUser {
   email: string;
   avatar_url: string | null;
   is_admin: boolean;
-  plan: "gratuit" | "premium" | "admin";
+  plan: "gratuit" | "boss" | "roi" | "admin";
   badge_premium: boolean;
   is_active: boolean;
   status: "actif" | "suspendu" | "bloque";
@@ -91,9 +91,10 @@ const STATUS_CONFIG = {
   bloque:   { label: "Bloqué",   color: "text-red-700",    bg: "bg-red-100",    icon: XCircle       },
 };
 
-const PLAN_CONFIG = {
+const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   gratuit: { label: "Gratuit", color: "text-gray-600",   bg: "bg-gray-100"   },
-  premium: { label: "Premium", color: "text-violet-700", bg: "bg-violet-100" },
+  boss:    { label: "Boss",    color: "text-blue-700",    bg: "bg-blue-100"   },
+  roi:     { label: "Roi",     color: "text-violet-700",  bg: "bg-violet-100" },
   admin:   { label: "Admin",   color: "text-amber-700",  bg: "bg-amber-100"  },
 };
 
@@ -204,7 +205,7 @@ export default function AdminPanelPage() {
 
       setStats({
         totalUsers: u.length,
-        premiumUsers: u.filter(x => x.plan === "premium").length,
+        premiumUsers: u.filter(x => x.plan === "boss" || x.plan === "roi").length,
         gratuitUsers: u.filter(x => x.plan === "gratuit").length,
         adminUsers: u.filter(x => x.is_admin).length,
         activeUsers: u.filter(x => x.status === "actif").length,
@@ -216,7 +217,7 @@ export default function AdminPanelPage() {
         totalCommandes: c.length,
         chiffreAffairesTotal: ca,
         newUsersToday: u.filter(x => new Date(x.created_at).toDateString() === today).length,
-        newPremiumToday: u.filter(x => x.plan === "premium" && x.premium_since && new Date(x.premium_since).toDateString() === today).length,
+        newPremiumToday: u.filter(x => (x.plan === "boss" || x.plan === "roi") && x.premium_since && new Date(x.premium_since).toDateString() === today).length,
       });
     } catch (err) {
       toast({ title: "Erreur de chargement", variant: "destructive" });
@@ -300,7 +301,7 @@ export default function AdminPanelPage() {
           const days = parseInt(premiumDays) || 30;
           const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
           await supabase.from("nexora_users" as any).update({
-            plan: "premium", badge_premium: true,
+            plan: "roi", badge_premium: true,
             premium_since: new Date().toISOString(),
             premium_expires_at: expiresAt,
           }).eq("id", target.id);
@@ -630,7 +631,7 @@ export default function AdminPanelPage() {
                     </div>
                     {isExpanded && (
                       <div className="border-t border-border bg-muted/30 p-4 space-y-4">
-                        {user.plan === "premium" && (
+                        {(user.plan === "boss" || user.plan === "roi") && (
                           <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 text-sm">
                             <p className="font-semibold text-violet-700 mb-1">Premium</p>
                             <p className="text-xs text-violet-600">Depuis : {fmtDate(user.premium_since)}</p>
@@ -673,13 +674,13 @@ export default function AdminPanelPage() {
                           </div>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          {user.plan !== "premium" && !user.is_admin && (
+                          {user.plan !== "boss" && user.plan !== "roi" && !user.is_admin && (
                             <button onClick={() => { setActionModal({ type: "activer_premium", target: user, targetType: "user" }); setActionReason(""); setPremiumDays("30"); }}
                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 font-medium transition-colors">
                               <Crown className="w-3.5 h-3.5" /> Activer Premium
                             </button>
                           )}
-                          {user.plan === "premium" && (
+                          {(user.plan === "boss" || user.plan === "roi") && (
                             <button onClick={() => { setActionModal({ type: "retirer_premium", target: user, targetType: "user" }); setActionReason(""); }}
                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition-colors">
                               <UserX className="w-3.5 h-3.5" /> Retirer Premium
@@ -859,9 +860,9 @@ export default function AdminPanelPage() {
               </div>
             </div>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Comptes Premium</p>
-            {users.filter(u => u.plan === "premium").length === 0 ? (
+            {users.filter(u => u.plan === "boss" || u.plan === "roi").length === 0 ? (
               <div className="text-center py-10 text-muted-foreground bg-card border border-border rounded-2xl text-sm">Aucun utilisateur premium</div>
-            ) : users.filter(u => u.plan === "premium").map(user => (
+            ) : users.filter(u => u.plan === "boss" || u.plan === "roi").map(user => (
               <div key={user.id} className="bg-card border border-violet-200 rounded-xl p-4 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center font-bold text-violet-700 text-sm flex-shrink-0">
                   {user.nom_prenom.slice(0, 2).toUpperCase()}

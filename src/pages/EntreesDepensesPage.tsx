@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatAmount, convertAmount, playSuccessSound } from "@/lib/app-utils";
-import { hasNexoraPremium } from "@/lib/nexora-auth";
+import { hasNexoraPremium, getNexoraUser } from "@/lib/nexora-auth";
 import { useNavigate } from "react-router-dom";
 
 type Devise = "XOF" | "USD";
@@ -101,7 +101,9 @@ function EntreesContent() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("entrees" as any).select("*").order("date_entree", { ascending: false });
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
+    const { data } = await supabase.from("entrees" as any).select("*").eq("user_id", userId).order("date_entree", { ascending: false });
     setEntrees(data || []);
     setLoading(false);
   };
@@ -119,9 +121,11 @@ function EntreesContent() {
     }
     if (!form.titre || !form.montant) { toast({ title: "Titre et montant requis", variant: "destructive" }); return; }
     setSaving(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("entrees" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), categorie: form.categorie,
-      devise: form.devise, date_entree: form.date_entree, note: form.note || null
+      devise: form.devise, date_entree: form.date_entree, note: form.note || null, user_id: userId
     });
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
@@ -265,7 +269,9 @@ function DepensesContent() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("depenses" as any).select("*").order("date_depense", { ascending: false });
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
+    const { data } = await supabase.from("depenses" as any).select("*").eq("user_id", userId).order("date_depense", { ascending: false });
     setDepenses(data || []);
     setLoading(false);
   };
@@ -283,9 +289,11 @@ function DepensesContent() {
     }
     if (!form.titre || !form.montant) { toast({ title: "Titre et montant requis", variant: "destructive" }); return; }
     setSaving(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("depenses" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), categorie: form.categorie,
-      devise: form.devise, date_depense: form.date_depense, note: form.note || null
+      devise: form.devise, date_depense: form.date_depense, note: form.note || null, user_id: userId
     });
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { hasNexoraPremium } from "@/lib/nexora-auth";
+import { hasNexoraPremium, getNexoraUser } from "@/lib/nexora-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, FileDown, Trash2, ChevronDown, ChevronUp, Receipt, History, Crown } from "lucide-react";
@@ -194,8 +194,10 @@ export default function FacturesPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("factures" as any).select("*, articles_facture(*)").order("created_at", { ascending: false });
-    if (data) setFactures((data as any[]).map(f => ({ ...f, articles: f.articles_facture || [] })));
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
+    const { data } = await supabase.from("factures" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false });
+    if (data) setFactures((data as any[]).map(f => ({ ...f, articles: [] })));
     setLoading(false);
   };
 

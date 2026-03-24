@@ -21,14 +21,16 @@ export default function BoutiqueAccueilPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data: b } = await supabase
-      .from("boutiques" as any).select("*").limit(1).single();
+      const userId = user?.id;
+      if (!userId) { setLoading(false); return; }
+      const { data: b } = await supabase
+        .from("boutiques" as any).select("*").eq("user_id", userId).limit(1).maybeSingle();
     if (!b) { setLoading(false); return; }
     setBoutique(b);
 
     const { data: cmds } = await supabase
       .from("commandes" as any)
-      .select("*, articles_commande(*)")
+      .select("*")
       .eq("boutique_id", (b as any).id)
       .order("created_at", { ascending: false });
     setCommandes(cmds as any[] || []);

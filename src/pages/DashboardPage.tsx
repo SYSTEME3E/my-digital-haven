@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const nexoraUser = getNexoraUser();
   const displayName = nexoraUser?.nom_prenom?.split(" ")[0] || "Eric";
   const hasBadge = nexoraUser?.badge_premium || nexoraUser?.is_admin;
-  const isPremium = nexoraUser?.plan === "premium" || nexoraUser?.plan === "admin";
+  const isPremium = nexoraUser?.plan === "boss" || nexoraUser?.plan === "roi" || nexoraUser?.plan === "admin";
 
   useEffect(() => {
     loadStats();
@@ -91,14 +91,16 @@ export default function DashboardPage() {
     const toXOF = (m: number, dev: string) =>
       dev === "USD" ? convertAmount(m, "USD", "XOF") : m;
 
+    const userId = nexoraUser?.id;
+    if (!userId) { setLoading(false); return; }
     const [depResult, entResult, coffreResult, liensResult, pretsResult, investResult] =
       await Promise.all([
-        supabase.from("depenses" as any).select("montant, devise, date_depense, titre, created_at").order("created_at", { ascending: false }),
-        supabase.from("entrees" as any).select("montant, devise, date_entree, titre, created_at").order("created_at", { ascending: false }),
-        supabase.from("coffre_fort" as any).select("id"),
-        supabase.from("liens_contacts" as any).select("id"),
-        supabase.from("prets" as any).select("id").eq("statut", "en_attente"),
-        supabase.from("investissements" as any).select("id").eq("statut", "actif"),
+        supabase.from("depenses" as any).select("montant, devise, date_depense, titre, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("entrees" as any).select("montant, devise, date_entree, titre, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("coffre_fort" as any).select("id").eq("user_id", userId),
+        supabase.from("liens_contacts" as any).select("id").eq("user_id", userId),
+        supabase.from("prets" as any).select("id").eq("user_id", userId).eq("statut", "en_attente"),
+        supabase.from("investissements" as any).select("id").eq("user_id", userId).eq("statut", "actif"),
       ]);
 
     const deps = depResult.data || [];
@@ -345,7 +347,7 @@ export default function DashboardPage() {
             style={{ padding: "10px 6px" }}>
             <PiggyBank style={{ width: 18, height: 18, color: "#059669" }} />
             <div className="font-semibold text-emerald-700" style={{ fontSize: "10px", marginTop: "4px" }}>
-              Investissements
+              Épargne
             </div>
             <div className="font-display font-black text-emerald-700" style={{ fontSize: "18px", marginTop: "2px" }}>
               {loading ? "—" : stats.nbInvest}

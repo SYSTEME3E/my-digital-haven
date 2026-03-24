@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatAmount } from "@/lib/app-utils";
-import { hasNexoraPremium } from "@/lib/nexora-auth";
+import { hasNexoraPremium, getNexoraUser } from "@/lib/nexora-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, FileDown, ChevronDown, ChevronUp, Trash2, HandCoins, Wallet, Calendar, ArrowRight, Crown } from "lucide-react";
@@ -264,9 +264,11 @@ export default function PretsPage() {
 
   const load = async () => {
     setLoading(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) { setLoading(false); return; }
     const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("prets" as any).select("*").order("created_at", { ascending: false }),
-      supabase.from("remboursements" as any).select("*").order("date_remboursement", { ascending: false }),
+      supabase.from("prets" as any).select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("remboursements" as any).select("*").eq("user_id", userId).order("date_remboursement", { ascending: false }),
     ]);
     setPrets((p as unknown as Pret[]) || []);
     setRemboursements((r as unknown as Remboursement[]) || []);
@@ -299,9 +301,12 @@ export default function PretsPage() {
       return;
     }
 
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("prets" as any).insert({
       type: activeTab,
       nom_personne: form.nom_personne,
+      user_id: userId,
       montant: parseFloat(form.montant),
       devise: form.devise,
       objectif: form.objectif,
@@ -330,8 +335,10 @@ export default function PretsPage() {
     const montant = parseFloat(rembForm.montant);
     const nouveauTotal = pret.montant_rembourse + montant;
     const nouveauStatut: Statut = nouveauTotal >= pret.montant ? "rembourse" : "partiel";
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("remboursements" as any).insert({
-      pret_id: pret.id, montant, devise: pret.devise, note: rembForm.note || null,
+      pret_id: pret.id, montant, devise: pret.devise, note: rembForm.note || null, user_id: userId,
     });
     if (!error) {
       await supabase.from("prets" as any).update({ montant_rembourse: nouveauTotal, statut: nouveauStatut }).eq("id", pret.id);

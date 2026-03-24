@@ -26,7 +26,7 @@ export default function ProfilPage() {
   const { toast } = useToast();
 
   const isAdmin = nexoraUser?.is_admin;
-  const isPremium = nexoraUser?.plan === "premium" || isAdmin;
+  const isPremium = nexoraUser?.plan === "boss" || nexoraUser?.plan === "roi" || isAdmin;
   const hasBadge = isPremium || isAdmin;
 
   // ── Sauvegarder profil

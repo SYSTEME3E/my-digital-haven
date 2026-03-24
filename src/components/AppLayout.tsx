@@ -7,7 +7,7 @@ import {
   ShieldCheck, ArrowLeftRight // ✅ Import ajouté
 } from "lucide-react";
 import { clearSession, isAdminUser } from "@/lib/app-utils";
-import { logoutUser, getNexoraUser, isNexoraAdmin, refreshNexoraSession } from "@/lib/nexora-auth";
+import { logoutUser, getNexoraUser, isNexoraAdmin, refreshNexoraSession, type NexoraPlan } from "@/lib/nexora-auth";
 import { Input } from "@/components/ui/input";
 import { ReactNode } from "react";
 import nexoraLogo from "@/assets/nexora-logo.png";
@@ -23,7 +23,7 @@ const getNavItems = (isAdmin: boolean) => {
     { path: "/transfert",        icon: ArrowLeftRight,   label: "Nexora Transfert",   color: "text-violet-400",  bg: "bg-violet-400/10"  },
     
     { path: "/prets",            icon: HandCoins,        label: "Prêts & Dettes",      color: "text-orange-300",  bg: "bg-orange-300/10"  },
-    { path: "/investissements",  icon: PiggyBank,        label: "Investissements",     color: "text-emerald-300", bg: "bg-emerald-300/10" },
+    { path: "/investissements",  icon: PiggyBank,        label: "Épargne",             color: "text-emerald-300", bg: "bg-emerald-300/10" },
     { path: "/factures",         icon: Receipt,          label: "Factures",            color: "text-purple-300",  bg: "bg-purple-300/10"  },
     { path: "/coffre-fort",      icon: Lock,             label: "Coffre-fort",         color: "text-yellow-300",  bg: "bg-yellow-300/10"  },
     { path: "/liens",            icon: Link2,            label: "Liens & Contacts",    color: "text-green-300",   bg: "bg-green-300/10"   },
@@ -60,7 +60,7 @@ export default function AppLayout({ children, searchQuery = "", onSearchChange }
   const navItems    = getNavItems(adminUser);
 
   const displayName = nexoraUser?.nom_prenom || "Eric Kpakpo";
-  const displayRole = nexoraUser?.is_admin ? "Administrateur" : nexoraUser?.plan === "premium" ? "Premium" : "Gratuit";
+  const displayRole = nexoraUser?.is_admin ? "Administrateur" : (nexoraUser?.plan === "boss" || nexoraUser?.plan === "roi") ? "Premium" : "Gratuit";
   const hasBadge    = nexoraUser?.badge_premium || nexoraUser?.is_admin;
   const isAdminPage = location.pathname === "/admin";
   const canGoBack   = location.pathname !== "/dashboard";
