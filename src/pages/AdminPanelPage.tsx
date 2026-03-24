@@ -301,7 +301,7 @@ export default function AdminPanelPage() {
           const days = parseInt(premiumDays) || 30;
           const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
           await supabase.from("nexora_users" as any).update({
-            plan: "premium", badge_premium: true,
+            plan: "roi", badge_premium: true,
             premium_since: new Date().toISOString(),
             premium_expires_at: expiresAt,
           }).eq("id", target.id);

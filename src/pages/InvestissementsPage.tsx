@@ -29,12 +29,11 @@ export default function EpargneNexoraPage() {
     setLoading(true);
     try {
       // Logique d'insertion Database
-      const { error } = await supabase.from("transactions_epargne").insert({
+      const { error } = await supabase.from("versements_investissement" as any).insert({
         user_id: user?.id,
+        investissement_id: user?.id, // placeholder
         montant: Number(montant),
-        montant_net: montantFinal,
         type: "retrait",
-        statut: "termine"
       });
 
       if (error) throw error;

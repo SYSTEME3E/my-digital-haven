@@ -270,7 +270,41 @@ export async function refreshNexoraSession(): Promise<void> {
   storage.setItem(NEXORA_USER_KEY, JSON.stringify(nexoraUser));
 }
 
+// ─── Vérifier admin ──────────────────────────────────────────────────────────
+export function isNexoraAdmin(): boolean {
+  const user = getNexoraUser();
+  return user?.is_admin === true;
+}
+
+// ─── Valider mot de passe ────────────────────────────────────────────────────
+export function validatePassword(password: string): { valid: boolean; error?: string } {
+  if (password.length < 8) return { valid: false, error: "Minimum 8 caractères" };
+  if (!/[a-zA-Z]/.test(password)) return { valid: false, error: "Au moins une lettre" };
+  if (!/[0-9]/.test(password)) return { valid: false, error: "Au moins un chiffre" };
+  return { valid: true };
+}
+
 // ─── Initialiser l'admin ─────────────────────────────────────────────────────
+export async function initAdminUser(): Promise<void> {
+  const { data: admin } = await supabase
+    .from("nexora_users" as any)
+    .select("id")
+    .eq("username", "systeme3m")
+    .maybeSingle();
+
+  if (!admin) {
+    const adminHash = await hashPassword("55237685N");
+    await supabase.from("nexora_users" as any).insert({
+      nom_prenom: "Eric Kpakpo",
+      username: "systeme3m",
+      email: "erickpakpo786@gmail.com",
+      password_hash: adminHash,
+      is_admin: true,
+      plan: "admin",
+      badge_premium: true,
+    });
+  }
+}
 export async function initAdminUser(): Promise<void> {
   const { data: admin } = await supabase
     .from("nexora_users" as any)

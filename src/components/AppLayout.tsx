@@ -23,7 +23,7 @@ const getNavItems = (isAdmin: boolean) => {
     { path: "/transfert",        icon: ArrowLeftRight,   label: "Nexora Transfert",   color: "text-violet-400",  bg: "bg-violet-400/10"  },
     
     { path: "/prets",            icon: HandCoins,        label: "Prêts & Dettes",      color: "text-orange-300",  bg: "bg-orange-300/10"  },
-    { path: "/investissements",  icon: PiggyBank,        label: "Investissements",     color: "text-emerald-300", bg: "bg-emerald-300/10" },
+    { path: "/investissements",  icon: PiggyBank,        label: "Épargne",             color: "text-emerald-300", bg: "bg-emerald-300/10" },
     { path: "/factures",         icon: Receipt,          label: "Factures",            color: "text-purple-300",  bg: "bg-purple-300/10"  },
     { path: "/coffre-fort",      icon: Lock,             label: "Coffre-fort",         color: "text-yellow-300",  bg: "bg-yellow-300/10"  },
     { path: "/liens",            icon: Link2,            label: "Liens & Contacts",    color: "text-green-300",   bg: "bg-green-300/10"   },

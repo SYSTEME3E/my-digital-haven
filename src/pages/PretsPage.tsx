@@ -335,8 +335,10 @@ export default function PretsPage() {
     const montant = parseFloat(rembForm.montant);
     const nouveauTotal = pret.montant_rembourse + montant;
     const nouveauStatut: Statut = nouveauTotal >= pret.montant ? "rembourse" : "partiel";
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("remboursements" as any).insert({
-      pret_id: pret.id, montant, devise: pret.devise, note: rembForm.note || null,
+      pret_id: pret.id, montant, devise: pret.devise, note: rembForm.note || null, user_id: userId,
     });
     if (!error) {
       await supabase.from("prets" as any).update({ montant_rembourse: nouveauTotal, statut: nouveauStatut }).eq("id", pret.id);

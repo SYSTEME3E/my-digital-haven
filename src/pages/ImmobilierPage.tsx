@@ -185,7 +185,7 @@ export default function ImmobilierPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const hasPremium = user?.plan === "premium" || user?.plan === "admin";
+  const hasPremium = user?.plan === "boss" || user?.plan === "roi" || user?.plan === "admin";
   const userId = user?.id || "guest";
 
   const [annonces, setAnnonces] = useState<Annonce[]>([]);

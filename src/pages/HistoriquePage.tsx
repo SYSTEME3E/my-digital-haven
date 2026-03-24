@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatAmount, convertAmount, getWeekNumber, getMondayOfWeek } from "@/lib/app-utils";
 import AppLayout from "@/components/AppLayout";
 import { TrendingDown, TrendingUp, Calendar, Clock, Filter, ChevronDown } from "lucide-react";
+import { getNexoraUser } from "@/lib/nexora-auth";
 
 type Devise = "XOF" | "USD";
 type TabType = "tout" | "depenses" | "entrees";

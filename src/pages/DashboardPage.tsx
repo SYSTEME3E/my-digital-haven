@@ -347,7 +347,7 @@ export default function DashboardPage() {
             style={{ padding: "10px 6px" }}>
             <PiggyBank style={{ width: 18, height: 18, color: "#059669" }} />
             <div className="font-semibold text-emerald-700" style={{ fontSize: "10px", marginTop: "4px" }}>
-              Investissements
+              Épargne
             </div>
             <div className="font-display font-black text-emerald-700" style={{ fontSize: "18px", marginTop: "2px" }}>
               {loading ? "—" : stats.nbInvest}

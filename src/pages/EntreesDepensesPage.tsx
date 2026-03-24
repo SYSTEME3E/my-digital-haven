@@ -289,9 +289,11 @@ function DepensesContent() {
     }
     if (!form.titre || !form.montant) { toast({ title: "Titre et montant requis", variant: "destructive" }); return; }
     setSaving(true);
+    const userId = getNexoraUser()?.id;
+    if (!userId) return;
     const { error } = await supabase.from("depenses" as any).insert({
       titre: form.titre, montant: parseFloat(form.montant), categorie: form.categorie,
-      devise: form.devise, date_depense: form.date_depense, note: form.note || null
+      devise: form.devise, date_depense: form.date_depense, note: form.note || null, user_id: userId
     });
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
