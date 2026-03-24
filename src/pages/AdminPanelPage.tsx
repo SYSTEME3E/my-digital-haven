@@ -217,7 +217,7 @@ export default function AdminPanelPage() {
         totalCommandes: c.length,
         chiffreAffairesTotal: ca,
         newUsersToday: u.filter(x => new Date(x.created_at).toDateString() === today).length,
-        newPremiumToday: u.filter(x => x.plan === "premium" && x.premium_since && new Date(x.premium_since).toDateString() === today).length,
+        newPremiumToday: u.filter(x => (x.plan === "boss" || x.plan === "roi") && x.premium_since && new Date(x.premium_since).toDateString() === today).length,
       });
     } catch (err) {
       toast({ title: "Erreur de chargement", variant: "destructive" });
