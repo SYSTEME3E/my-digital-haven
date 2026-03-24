@@ -680,7 +680,7 @@ export default function AdminPanelPage() {
                               <Crown className="w-3.5 h-3.5" /> Activer Premium
                             </button>
                           )}
-                          {user.plan === "premium" && (
+                          {(user.plan === "boss" || user.plan === "roi") && (
                             <button onClick={() => { setActionModal({ type: "retirer_premium", target: user, targetType: "user" }); setActionReason(""); }}
                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition-colors">
                               <UserX className="w-3.5 h-3.5" /> Retirer Premium
